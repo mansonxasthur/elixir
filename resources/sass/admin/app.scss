@@ -1,0 +1,21 @@
+// Fonts
+@import url('https://fonts.googleapis.com/css?family=Nunito');
+
+// Fonts
+@import '~material-design-icons-iconfont/dist/material-design-icons.css';
+@import '~@mdi/font/css/materialdesignicons.min.css';
+@import '~@fortawesome/fontawesome-free/scss/fontawesome';
+
+// Vuetify
+@import '~vuetify/dist/vuetify.min.css';
+@import '~animate.css/animate.min.css';
+
+.v-card {
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+}
+
+[v-cloak] {
+  display: none;
+}
