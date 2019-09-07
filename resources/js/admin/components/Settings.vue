@@ -7,13 +7,13 @@
                         <h4 class="body-1 grey--text lighten-1">Profile Info</h4>
                         <v-spacer></v-spacer>
                         <v-btn icon small @click="editInfo = true" v-if="!editInfo">
-                            <v-icon text small>edit</v-icon>
+                            <v-icon text small>mdi-pencil</v-icon>
                         </v-btn>
                         <v-btn icon small @click="updateInfo()" v-if="editInfo">
-                            <v-icon text small color="info">save</v-icon>
+                            <v-icon text small color="info">mdi-content-save</v-icon>
                         </v-btn>
                         <v-btn icon small @click="cancelInfoEdit()" v-if="editInfo">
-                            <v-icon text small color="red">close</v-icon>
+                            <v-icon text small color="red">mdi-close</v-icon>
                         </v-btn>
                     </v-card-title>
                     <v-card-text class="pa-0">
@@ -23,7 +23,7 @@
                                     <v-text-field
                                             label="Name"
                                             v-model="user.name"
-                                            prepend-icon="person"
+                                            prepend-icon="mdi-account"
                                             :rules="nameRules"
                                     ></v-text-field>
                                 </v-list-item>
@@ -31,7 +31,7 @@
                                     <v-text-field
                                             label="Email"
                                             v-model="user.email"
-                                            prepend-icon="email"
+                                            prepend-icon="mdi-email"
                                             :rules="emailRules"
                                     ></v-text-field>
                                 </v-list-item>
@@ -40,7 +40,7 @@
                         <v-list v-else>
                             <v-list-item>
                                 <v-list-item-icon>
-                                    <v-icon text>person</v-icon>
+                                    <v-icon text>mdi-account</v-icon>
                                 </v-list-item-icon>
                                 <v-list-item-content>
                                     <v-list-item-title v-text="user.name"></v-list-item-title>
@@ -48,7 +48,7 @@
                             </v-list-item>
                             <v-list-item>
                                 <v-list-item-icon>
-                                    <v-icon text>email</v-icon>
+                                    <v-icon text>mdi-email</v-icon>
                                 </v-list-item-icon>
                                 <v-list-item-content>
                                     <v-list-item-title v-text="user.email"></v-list-item-title>
@@ -61,13 +61,13 @@
                         <h4 class="body-1 grey--text lighten-1">Change Password</h4>
                         <v-spacer></v-spacer>
                         <v-btn icon small @click="changePassword = true"  v-if="!changePassword">
-                            <v-icon text small>edit</v-icon>
+                            <v-icon text small>mdi-pencil</v-icon>
                         </v-btn>
                         <v-btn icon small @click="updatePassword()" v-if="changePassword">
-                            <v-icon text small color="info">save</v-icon>
+                            <v-icon text small color="info">mdi-content-save</v-icon>
                         </v-btn>
                         <v-btn icon small @click="cancelPasswordEdit()" v-if="changePassword">
-                            <v-icon text small color="red">close</v-icon>
+                            <v-icon text small color="red">mdi-close</v-icon>
                         </v-btn>
                     </v-card-title>
                     <v-card-text v-if="changePassword">
@@ -78,7 +78,7 @@
                                             label="Password"
                                             v-model="password"
                                             type="password"
-                                            prepend-icon="lock"
+                                            prepend-icon="mdi-lock"
                                             :rules="passwordRules"
                                     ></v-text-field>
                                 </v-list-item>
@@ -87,7 +87,7 @@
                                             label="Confirm Password"
                                             v-model="password_confirmation"
                                             type="password"
-                                            prepend-icon="lock"
+                                            prepend-icon="mdi-lock"
                                             :rules="passwordConfirmationRules"
                                     ></v-text-field>
                                 </v-list-item>

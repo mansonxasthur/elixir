@@ -2207,17 +2207,28 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "NavDrawer",
   data: function data() {
     return {
+      item: null,
       navItems: [{
         uri: '/home',
-        icon: 'dashboard',
+        icon: 'mdi-view-dashboard',
         title: 'Dashboard'
       }]
     };
+  },
+  created: function created() {
+    var _this = this;
+
+    Object.keys(this.navItems).forEach(function (key) {
+      if (_this.navItems[key].uri === window.location.pathname) {
+        _this.item = Number(key);
+      }
+    });
   },
   computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapGetters"])(['getDrawer']), {
     drawer: {
@@ -19404,2624 +19415,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 /***/ }),
 
-/***/ "./node_modules/popper.js/dist/esm/popper.js":
-/*!***************************************************!*\
-  !*** ./node_modules/popper.js/dist/esm/popper.js ***!
-  \***************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function(global) {/**!
- * @fileOverview Kickass library to create and place poppers near their reference elements.
- * @version 1.15.0
- * @license
- * Copyright (c) 2016 Federico Zivolo and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-var isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
-
-var longerTimeoutBrowsers = ['Edge', 'Trident', 'Firefox'];
-var timeoutDuration = 0;
-for (var i = 0; i < longerTimeoutBrowsers.length; i += 1) {
-  if (isBrowser && navigator.userAgent.indexOf(longerTimeoutBrowsers[i]) >= 0) {
-    timeoutDuration = 1;
-    break;
-  }
-}
-
-function microtaskDebounce(fn) {
-  var called = false;
-  return function () {
-    if (called) {
-      return;
-    }
-    called = true;
-    window.Promise.resolve().then(function () {
-      called = false;
-      fn();
-    });
-  };
-}
-
-function taskDebounce(fn) {
-  var scheduled = false;
-  return function () {
-    if (!scheduled) {
-      scheduled = true;
-      setTimeout(function () {
-        scheduled = false;
-        fn();
-      }, timeoutDuration);
-    }
-  };
-}
-
-var supportsMicroTasks = isBrowser && window.Promise;
-
-/**
-* Create a debounced version of a method, that's asynchronously deferred
-* but called in the minimum time possible.
-*
-* @method
-* @memberof Popper.Utils
-* @argument {Function} fn
-* @returns {Function}
-*/
-var debounce = supportsMicroTasks ? microtaskDebounce : taskDebounce;
-
-/**
- * Check if the given variable is a function
- * @method
- * @memberof Popper.Utils
- * @argument {Any} functionToCheck - variable to check
- * @returns {Boolean} answer to: is a function?
- */
-function isFunction(functionToCheck) {
-  var getType = {};
-  return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
-}
-
-/**
- * Get CSS computed property of the given element
- * @method
- * @memberof Popper.Utils
- * @argument {Eement} element
- * @argument {String} property
- */
-function getStyleComputedProperty(element, property) {
-  if (element.nodeType !== 1) {
-    return [];
-  }
-  // NOTE: 1 DOM access here
-  var window = element.ownerDocument.defaultView;
-  var css = window.getComputedStyle(element, null);
-  return property ? css[property] : css;
-}
-
-/**
- * Returns the parentNode or the host of the element
- * @method
- * @memberof Popper.Utils
- * @argument {Element} element
- * @returns {Element} parent
- */
-function getParentNode(element) {
-  if (element.nodeName === 'HTML') {
-    return element;
-  }
-  return element.parentNode || element.host;
-}
-
-/**
- * Returns the scrolling parent of the given element
- * @method
- * @memberof Popper.Utils
- * @argument {Element} element
- * @returns {Element} scroll parent
- */
-function getScrollParent(element) {
-  // Return body, `getScroll` will take care to get the correct `scrollTop` from it
-  if (!element) {
-    return document.body;
-  }
-
-  switch (element.nodeName) {
-    case 'HTML':
-    case 'BODY':
-      return element.ownerDocument.body;
-    case '#document':
-      return element.body;
-  }
-
-  // Firefox want us to check `-x` and `-y` variations as well
-
-  var _getStyleComputedProp = getStyleComputedProperty(element),
-      overflow = _getStyleComputedProp.overflow,
-      overflowX = _getStyleComputedProp.overflowX,
-      overflowY = _getStyleComputedProp.overflowY;
-
-  if (/(auto|scroll|overlay)/.test(overflow + overflowY + overflowX)) {
-    return element;
-  }
-
-  return getScrollParent(getParentNode(element));
-}
-
-var isIE11 = isBrowser && !!(window.MSInputMethodContext && document.documentMode);
-var isIE10 = isBrowser && /MSIE 10/.test(navigator.userAgent);
-
-/**
- * Determines if the browser is Internet Explorer
- * @method
- * @memberof Popper.Utils
- * @param {Number} version to check
- * @returns {Boolean} isIE
- */
-function isIE(version) {
-  if (version === 11) {
-    return isIE11;
-  }
-  if (version === 10) {
-    return isIE10;
-  }
-  return isIE11 || isIE10;
-}
-
-/**
- * Returns the offset parent of the given element
- * @method
- * @memberof Popper.Utils
- * @argument {Element} element
- * @returns {Element} offset parent
- */
-function getOffsetParent(element) {
-  if (!element) {
-    return document.documentElement;
-  }
-
-  var noOffsetParent = isIE(10) ? document.body : null;
-
-  // NOTE: 1 DOM access here
-  var offsetParent = element.offsetParent || null;
-  // Skip hidden elements which don't have an offsetParent
-  while (offsetParent === noOffsetParent && element.nextElementSibling) {
-    offsetParent = (element = element.nextElementSibling).offsetParent;
-  }
-
-  var nodeName = offsetParent && offsetParent.nodeName;
-
-  if (!nodeName || nodeName === 'BODY' || nodeName === 'HTML') {
-    return element ? element.ownerDocument.documentElement : document.documentElement;
-  }
-
-  // .offsetParent will return the closest TH, TD or TABLE in case
-  // no offsetParent is present, I hate this job...
-  if (['TH', 'TD', 'TABLE'].indexOf(offsetParent.nodeName) !== -1 && getStyleComputedProperty(offsetParent, 'position') === 'static') {
-    return getOffsetParent(offsetParent);
-  }
-
-  return offsetParent;
-}
-
-function isOffsetContainer(element) {
-  var nodeName = element.nodeName;
-
-  if (nodeName === 'BODY') {
-    return false;
-  }
-  return nodeName === 'HTML' || getOffsetParent(element.firstElementChild) === element;
-}
-
-/**
- * Finds the root node (document, shadowDOM root) of the given element
- * @method
- * @memberof Popper.Utils
- * @argument {Element} node
- * @returns {Element} root node
- */
-function getRoot(node) {
-  if (node.parentNode !== null) {
-    return getRoot(node.parentNode);
-  }
-
-  return node;
-}
-
-/**
- * Finds the offset parent common to the two provided nodes
- * @method
- * @memberof Popper.Utils
- * @argument {Element} element1
- * @argument {Element} element2
- * @returns {Element} common offset parent
- */
-function findCommonOffsetParent(element1, element2) {
-  // This check is needed to avoid errors in case one of the elements isn't defined for any reason
-  if (!element1 || !element1.nodeType || !element2 || !element2.nodeType) {
-    return document.documentElement;
-  }
-
-  // Here we make sure to give as "start" the element that comes first in the DOM
-  var order = element1.compareDocumentPosition(element2) & Node.DOCUMENT_POSITION_FOLLOWING;
-  var start = order ? element1 : element2;
-  var end = order ? element2 : element1;
-
-  // Get common ancestor container
-  var range = document.createRange();
-  range.setStart(start, 0);
-  range.setEnd(end, 0);
-  var commonAncestorContainer = range.commonAncestorContainer;
-
-  // Both nodes are inside #document
-
-  if (element1 !== commonAncestorContainer && element2 !== commonAncestorContainer || start.contains(end)) {
-    if (isOffsetContainer(commonAncestorContainer)) {
-      return commonAncestorContainer;
-    }
-
-    return getOffsetParent(commonAncestorContainer);
-  }
-
-  // one of the nodes is inside shadowDOM, find which one
-  var element1root = getRoot(element1);
-  if (element1root.host) {
-    return findCommonOffsetParent(element1root.host, element2);
-  } else {
-    return findCommonOffsetParent(element1, getRoot(element2).host);
-  }
-}
-
-/**
- * Gets the scroll value of the given element in the given side (top and left)
- * @method
- * @memberof Popper.Utils
- * @argument {Element} element
- * @argument {String} side `top` or `left`
- * @returns {number} amount of scrolled pixels
- */
-function getScroll(element) {
-  var side = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'top';
-
-  var upperSide = side === 'top' ? 'scrollTop' : 'scrollLeft';
-  var nodeName = element.nodeName;
-
-  if (nodeName === 'BODY' || nodeName === 'HTML') {
-    var html = element.ownerDocument.documentElement;
-    var scrollingElement = element.ownerDocument.scrollingElement || html;
-    return scrollingElement[upperSide];
-  }
-
-  return element[upperSide];
-}
-
-/*
- * Sum or subtract the element scroll values (left and top) from a given rect object
- * @method
- * @memberof Popper.Utils
- * @param {Object} rect - Rect object you want to change
- * @param {HTMLElement} element - The element from the function reads the scroll values
- * @param {Boolean} subtract - set to true if you want to subtract the scroll values
- * @return {Object} rect - The modifier rect object
- */
-function includeScroll(rect, element) {
-  var subtract = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-
-  var scrollTop = getScroll(element, 'top');
-  var scrollLeft = getScroll(element, 'left');
-  var modifier = subtract ? -1 : 1;
-  rect.top += scrollTop * modifier;
-  rect.bottom += scrollTop * modifier;
-  rect.left += scrollLeft * modifier;
-  rect.right += scrollLeft * modifier;
-  return rect;
-}
-
-/*
- * Helper to detect borders of a given element
- * @method
- * @memberof Popper.Utils
- * @param {CSSStyleDeclaration} styles
- * Result of `getStyleComputedProperty` on the given element
- * @param {String} axis - `x` or `y`
- * @return {number} borders - The borders size of the given axis
- */
-
-function getBordersSize(styles, axis) {
-  var sideA = axis === 'x' ? 'Left' : 'Top';
-  var sideB = sideA === 'Left' ? 'Right' : 'Bottom';
-
-  return parseFloat(styles['border' + sideA + 'Width'], 10) + parseFloat(styles['border' + sideB + 'Width'], 10);
-}
-
-function getSize(axis, body, html, computedStyle) {
-  return Math.max(body['offset' + axis], body['scroll' + axis], html['client' + axis], html['offset' + axis], html['scroll' + axis], isIE(10) ? parseInt(html['offset' + axis]) + parseInt(computedStyle['margin' + (axis === 'Height' ? 'Top' : 'Left')]) + parseInt(computedStyle['margin' + (axis === 'Height' ? 'Bottom' : 'Right')]) : 0);
-}
-
-function getWindowSizes(document) {
-  var body = document.body;
-  var html = document.documentElement;
-  var computedStyle = isIE(10) && getComputedStyle(html);
-
-  return {
-    height: getSize('Height', body, html, computedStyle),
-    width: getSize('Width', body, html, computedStyle)
-  };
-}
-
-var classCallCheck = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-};
-
-var createClass = function () {
-  function defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
-    }
-  }
-
-  return function (Constructor, protoProps, staticProps) {
-    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) defineProperties(Constructor, staticProps);
-    return Constructor;
-  };
-}();
-
-
-
-
-
-var defineProperty = function (obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-};
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
-/**
- * Given element offsets, generate an output similar to getBoundingClientRect
- * @method
- * @memberof Popper.Utils
- * @argument {Object} offsets
- * @returns {Object} ClientRect like output
- */
-function getClientRect(offsets) {
-  return _extends({}, offsets, {
-    right: offsets.left + offsets.width,
-    bottom: offsets.top + offsets.height
-  });
-}
-
-/**
- * Get bounding client rect of given element
- * @method
- * @memberof Popper.Utils
- * @param {HTMLElement} element
- * @return {Object} client rect
- */
-function getBoundingClientRect(element) {
-  var rect = {};
-
-  // IE10 10 FIX: Please, don't ask, the element isn't
-  // considered in DOM in some circumstances...
-  // This isn't reproducible in IE10 compatibility mode of IE11
-  try {
-    if (isIE(10)) {
-      rect = element.getBoundingClientRect();
-      var scrollTop = getScroll(element, 'top');
-      var scrollLeft = getScroll(element, 'left');
-      rect.top += scrollTop;
-      rect.left += scrollLeft;
-      rect.bottom += scrollTop;
-      rect.right += scrollLeft;
-    } else {
-      rect = element.getBoundingClientRect();
-    }
-  } catch (e) {}
-
-  var result = {
-    left: rect.left,
-    top: rect.top,
-    width: rect.right - rect.left,
-    height: rect.bottom - rect.top
-  };
-
-  // subtract scrollbar size from sizes
-  var sizes = element.nodeName === 'HTML' ? getWindowSizes(element.ownerDocument) : {};
-  var width = sizes.width || element.clientWidth || result.right - result.left;
-  var height = sizes.height || element.clientHeight || result.bottom - result.top;
-
-  var horizScrollbar = element.offsetWidth - width;
-  var vertScrollbar = element.offsetHeight - height;
-
-  // if an hypothetical scrollbar is detected, we must be sure it's not a `border`
-  // we make this check conditional for performance reasons
-  if (horizScrollbar || vertScrollbar) {
-    var styles = getStyleComputedProperty(element);
-    horizScrollbar -= getBordersSize(styles, 'x');
-    vertScrollbar -= getBordersSize(styles, 'y');
-
-    result.width -= horizScrollbar;
-    result.height -= vertScrollbar;
-  }
-
-  return getClientRect(result);
-}
-
-function getOffsetRectRelativeToArbitraryNode(children, parent) {
-  var fixedPosition = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-
-  var isIE10 = isIE(10);
-  var isHTML = parent.nodeName === 'HTML';
-  var childrenRect = getBoundingClientRect(children);
-  var parentRect = getBoundingClientRect(parent);
-  var scrollParent = getScrollParent(children);
-
-  var styles = getStyleComputedProperty(parent);
-  var borderTopWidth = parseFloat(styles.borderTopWidth, 10);
-  var borderLeftWidth = parseFloat(styles.borderLeftWidth, 10);
-
-  // In cases where the parent is fixed, we must ignore negative scroll in offset calc
-  if (fixedPosition && isHTML) {
-    parentRect.top = Math.max(parentRect.top, 0);
-    parentRect.left = Math.max(parentRect.left, 0);
-  }
-  var offsets = getClientRect({
-    top: childrenRect.top - parentRect.top - borderTopWidth,
-    left: childrenRect.left - parentRect.left - borderLeftWidth,
-    width: childrenRect.width,
-    height: childrenRect.height
-  });
-  offsets.marginTop = 0;
-  offsets.marginLeft = 0;
-
-  // Subtract margins of documentElement in case it's being used as parent
-  // we do this only on HTML because it's the only element that behaves
-  // differently when margins are applied to it. The margins are included in
-  // the box of the documentElement, in the other cases not.
-  if (!isIE10 && isHTML) {
-    var marginTop = parseFloat(styles.marginTop, 10);
-    var marginLeft = parseFloat(styles.marginLeft, 10);
-
-    offsets.top -= borderTopWidth - marginTop;
-    offsets.bottom -= borderTopWidth - marginTop;
-    offsets.left -= borderLeftWidth - marginLeft;
-    offsets.right -= borderLeftWidth - marginLeft;
-
-    // Attach marginTop and marginLeft because in some circumstances we may need them
-    offsets.marginTop = marginTop;
-    offsets.marginLeft = marginLeft;
-  }
-
-  if (isIE10 && !fixedPosition ? parent.contains(scrollParent) : parent === scrollParent && scrollParent.nodeName !== 'BODY') {
-    offsets = includeScroll(offsets, parent);
-  }
-
-  return offsets;
-}
-
-function getViewportOffsetRectRelativeToArtbitraryNode(element) {
-  var excludeScroll = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-  var html = element.ownerDocument.documentElement;
-  var relativeOffset = getOffsetRectRelativeToArbitraryNode(element, html);
-  var width = Math.max(html.clientWidth, window.innerWidth || 0);
-  var height = Math.max(html.clientHeight, window.innerHeight || 0);
-
-  var scrollTop = !excludeScroll ? getScroll(html) : 0;
-  var scrollLeft = !excludeScroll ? getScroll(html, 'left') : 0;
-
-  var offset = {
-    top: scrollTop - relativeOffset.top + relativeOffset.marginTop,
-    left: scrollLeft - relativeOffset.left + relativeOffset.marginLeft,
-    width: width,
-    height: height
-  };
-
-  return getClientRect(offset);
-}
-
-/**
- * Check if the given element is fixed or is inside a fixed parent
- * @method
- * @memberof Popper.Utils
- * @argument {Element} element
- * @argument {Element} customContainer
- * @returns {Boolean} answer to "isFixed?"
- */
-function isFixed(element) {
-  var nodeName = element.nodeName;
-  if (nodeName === 'BODY' || nodeName === 'HTML') {
-    return false;
-  }
-  if (getStyleComputedProperty(element, 'position') === 'fixed') {
-    return true;
-  }
-  var parentNode = getParentNode(element);
-  if (!parentNode) {
-    return false;
-  }
-  return isFixed(parentNode);
-}
-
-/**
- * Finds the first parent of an element that has a transformed property defined
- * @method
- * @memberof Popper.Utils
- * @argument {Element} element
- * @returns {Element} first transformed parent or documentElement
- */
-
-function getFixedPositionOffsetParent(element) {
-  // This check is needed to avoid errors in case one of the elements isn't defined for any reason
-  if (!element || !element.parentElement || isIE()) {
-    return document.documentElement;
-  }
-  var el = element.parentElement;
-  while (el && getStyleComputedProperty(el, 'transform') === 'none') {
-    el = el.parentElement;
-  }
-  return el || document.documentElement;
-}
-
-/**
- * Computed the boundaries limits and return them
- * @method
- * @memberof Popper.Utils
- * @param {HTMLElement} popper
- * @param {HTMLElement} reference
- * @param {number} padding
- * @param {HTMLElement} boundariesElement - Element used to define the boundaries
- * @param {Boolean} fixedPosition - Is in fixed position mode
- * @returns {Object} Coordinates of the boundaries
- */
-function getBoundaries(popper, reference, padding, boundariesElement) {
-  var fixedPosition = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
-
-  // NOTE: 1 DOM access here
-
-  var boundaries = { top: 0, left: 0 };
-  var offsetParent = fixedPosition ? getFixedPositionOffsetParent(popper) : findCommonOffsetParent(popper, reference);
-
-  // Handle viewport case
-  if (boundariesElement === 'viewport') {
-    boundaries = getViewportOffsetRectRelativeToArtbitraryNode(offsetParent, fixedPosition);
-  } else {
-    // Handle other cases based on DOM element used as boundaries
-    var boundariesNode = void 0;
-    if (boundariesElement === 'scrollParent') {
-      boundariesNode = getScrollParent(getParentNode(reference));
-      if (boundariesNode.nodeName === 'BODY') {
-        boundariesNode = popper.ownerDocument.documentElement;
-      }
-    } else if (boundariesElement === 'window') {
-      boundariesNode = popper.ownerDocument.documentElement;
-    } else {
-      boundariesNode = boundariesElement;
-    }
-
-    var offsets = getOffsetRectRelativeToArbitraryNode(boundariesNode, offsetParent, fixedPosition);
-
-    // In case of HTML, we need a different computation
-    if (boundariesNode.nodeName === 'HTML' && !isFixed(offsetParent)) {
-      var _getWindowSizes = getWindowSizes(popper.ownerDocument),
-          height = _getWindowSizes.height,
-          width = _getWindowSizes.width;
-
-      boundaries.top += offsets.top - offsets.marginTop;
-      boundaries.bottom = height + offsets.top;
-      boundaries.left += offsets.left - offsets.marginLeft;
-      boundaries.right = width + offsets.left;
-    } else {
-      // for all the other DOM elements, this one is good
-      boundaries = offsets;
-    }
-  }
-
-  // Add paddings
-  padding = padding || 0;
-  var isPaddingNumber = typeof padding === 'number';
-  boundaries.left += isPaddingNumber ? padding : padding.left || 0;
-  boundaries.top += isPaddingNumber ? padding : padding.top || 0;
-  boundaries.right -= isPaddingNumber ? padding : padding.right || 0;
-  boundaries.bottom -= isPaddingNumber ? padding : padding.bottom || 0;
-
-  return boundaries;
-}
-
-function getArea(_ref) {
-  var width = _ref.width,
-      height = _ref.height;
-
-  return width * height;
-}
-
-/**
- * Utility used to transform the `auto` placement to the placement with more
- * available space.
- * @method
- * @memberof Popper.Utils
- * @argument {Object} data - The data object generated by update method
- * @argument {Object} options - Modifiers configuration and options
- * @returns {Object} The data object, properly modified
- */
-function computeAutoPlacement(placement, refRect, popper, reference, boundariesElement) {
-  var padding = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
-
-  if (placement.indexOf('auto') === -1) {
-    return placement;
-  }
-
-  var boundaries = getBoundaries(popper, reference, padding, boundariesElement);
-
-  var rects = {
-    top: {
-      width: boundaries.width,
-      height: refRect.top - boundaries.top
-    },
-    right: {
-      width: boundaries.right - refRect.right,
-      height: boundaries.height
-    },
-    bottom: {
-      width: boundaries.width,
-      height: boundaries.bottom - refRect.bottom
-    },
-    left: {
-      width: refRect.left - boundaries.left,
-      height: boundaries.height
-    }
-  };
-
-  var sortedAreas = Object.keys(rects).map(function (key) {
-    return _extends({
-      key: key
-    }, rects[key], {
-      area: getArea(rects[key])
-    });
-  }).sort(function (a, b) {
-    return b.area - a.area;
-  });
-
-  var filteredAreas = sortedAreas.filter(function (_ref2) {
-    var width = _ref2.width,
-        height = _ref2.height;
-    return width >= popper.clientWidth && height >= popper.clientHeight;
-  });
-
-  var computedPlacement = filteredAreas.length > 0 ? filteredAreas[0].key : sortedAreas[0].key;
-
-  var variation = placement.split('-')[1];
-
-  return computedPlacement + (variation ? '-' + variation : '');
-}
-
-/**
- * Get offsets to the reference element
- * @method
- * @memberof Popper.Utils
- * @param {Object} state
- * @param {Element} popper - the popper element
- * @param {Element} reference - the reference element (the popper will be relative to this)
- * @param {Element} fixedPosition - is in fixed position mode
- * @returns {Object} An object containing the offsets which will be applied to the popper
- */
-function getReferenceOffsets(state, popper, reference) {
-  var fixedPosition = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
-
-  var commonOffsetParent = fixedPosition ? getFixedPositionOffsetParent(popper) : findCommonOffsetParent(popper, reference);
-  return getOffsetRectRelativeToArbitraryNode(reference, commonOffsetParent, fixedPosition);
-}
-
-/**
- * Get the outer sizes of the given element (offset size + margins)
- * @method
- * @memberof Popper.Utils
- * @argument {Element} element
- * @returns {Object} object containing width and height properties
- */
-function getOuterSizes(element) {
-  var window = element.ownerDocument.defaultView;
-  var styles = window.getComputedStyle(element);
-  var x = parseFloat(styles.marginTop || 0) + parseFloat(styles.marginBottom || 0);
-  var y = parseFloat(styles.marginLeft || 0) + parseFloat(styles.marginRight || 0);
-  var result = {
-    width: element.offsetWidth + y,
-    height: element.offsetHeight + x
-  };
-  return result;
-}
-
-/**
- * Get the opposite placement of the given one
- * @method
- * @memberof Popper.Utils
- * @argument {String} placement
- * @returns {String} flipped placement
- */
-function getOppositePlacement(placement) {
-  var hash = { left: 'right', right: 'left', bottom: 'top', top: 'bottom' };
-  return placement.replace(/left|right|bottom|top/g, function (matched) {
-    return hash[matched];
-  });
-}
-
-/**
- * Get offsets to the popper
- * @method
- * @memberof Popper.Utils
- * @param {Object} position - CSS position the Popper will get applied
- * @param {HTMLElement} popper - the popper element
- * @param {Object} referenceOffsets - the reference offsets (the popper will be relative to this)
- * @param {String} placement - one of the valid placement options
- * @returns {Object} popperOffsets - An object containing the offsets which will be applied to the popper
- */
-function getPopperOffsets(popper, referenceOffsets, placement) {
-  placement = placement.split('-')[0];
-
-  // Get popper node sizes
-  var popperRect = getOuterSizes(popper);
-
-  // Add position, width and height to our offsets object
-  var popperOffsets = {
-    width: popperRect.width,
-    height: popperRect.height
-  };
-
-  // depending by the popper placement we have to compute its offsets slightly differently
-  var isHoriz = ['right', 'left'].indexOf(placement) !== -1;
-  var mainSide = isHoriz ? 'top' : 'left';
-  var secondarySide = isHoriz ? 'left' : 'top';
-  var measurement = isHoriz ? 'height' : 'width';
-  var secondaryMeasurement = !isHoriz ? 'height' : 'width';
-
-  popperOffsets[mainSide] = referenceOffsets[mainSide] + referenceOffsets[measurement] / 2 - popperRect[measurement] / 2;
-  if (placement === secondarySide) {
-    popperOffsets[secondarySide] = referenceOffsets[secondarySide] - popperRect[secondaryMeasurement];
-  } else {
-    popperOffsets[secondarySide] = referenceOffsets[getOppositePlacement(secondarySide)];
-  }
-
-  return popperOffsets;
-}
-
-/**
- * Mimics the `find` method of Array
- * @method
- * @memberof Popper.Utils
- * @argument {Array} arr
- * @argument prop
- * @argument value
- * @returns index or -1
- */
-function find(arr, check) {
-  // use native find if supported
-  if (Array.prototype.find) {
-    return arr.find(check);
-  }
-
-  // use `filter` to obtain the same behavior of `find`
-  return arr.filter(check)[0];
-}
-
-/**
- * Return the index of the matching object
- * @method
- * @memberof Popper.Utils
- * @argument {Array} arr
- * @argument prop
- * @argument value
- * @returns index or -1
- */
-function findIndex(arr, prop, value) {
-  // use native findIndex if supported
-  if (Array.prototype.findIndex) {
-    return arr.findIndex(function (cur) {
-      return cur[prop] === value;
-    });
-  }
-
-  // use `find` + `indexOf` if `findIndex` isn't supported
-  var match = find(arr, function (obj) {
-    return obj[prop] === value;
-  });
-  return arr.indexOf(match);
-}
-
-/**
- * Loop trough the list of modifiers and run them in order,
- * each of them will then edit the data object.
- * @method
- * @memberof Popper.Utils
- * @param {dataObject} data
- * @param {Array} modifiers
- * @param {String} ends - Optional modifier name used as stopper
- * @returns {dataObject}
- */
-function runModifiers(modifiers, data, ends) {
-  var modifiersToRun = ends === undefined ? modifiers : modifiers.slice(0, findIndex(modifiers, 'name', ends));
-
-  modifiersToRun.forEach(function (modifier) {
-    if (modifier['function']) {
-      // eslint-disable-line dot-notation
-      console.warn('`modifier.function` is deprecated, use `modifier.fn`!');
-    }
-    var fn = modifier['function'] || modifier.fn; // eslint-disable-line dot-notation
-    if (modifier.enabled && isFunction(fn)) {
-      // Add properties to offsets to make them a complete clientRect object
-      // we do this before each modifier to make sure the previous one doesn't
-      // mess with these values
-      data.offsets.popper = getClientRect(data.offsets.popper);
-      data.offsets.reference = getClientRect(data.offsets.reference);
-
-      data = fn(data, modifier);
-    }
-  });
-
-  return data;
-}
-
-/**
- * Updates the position of the popper, computing the new offsets and applying
- * the new style.<br />
- * Prefer `scheduleUpdate` over `update` because of performance reasons.
- * @method
- * @memberof Popper
- */
-function update() {
-  // if popper is destroyed, don't perform any further update
-  if (this.state.isDestroyed) {
-    return;
-  }
-
-  var data = {
-    instance: this,
-    styles: {},
-    arrowStyles: {},
-    attributes: {},
-    flipped: false,
-    offsets: {}
-  };
-
-  // compute reference element offsets
-  data.offsets.reference = getReferenceOffsets(this.state, this.popper, this.reference, this.options.positionFixed);
-
-  // compute auto placement, store placement inside the data object,
-  // modifiers will be able to edit `placement` if needed
-  // and refer to originalPlacement to know the original value
-  data.placement = computeAutoPlacement(this.options.placement, data.offsets.reference, this.popper, this.reference, this.options.modifiers.flip.boundariesElement, this.options.modifiers.flip.padding);
-
-  // store the computed placement inside `originalPlacement`
-  data.originalPlacement = data.placement;
-
-  data.positionFixed = this.options.positionFixed;
-
-  // compute the popper offsets
-  data.offsets.popper = getPopperOffsets(this.popper, data.offsets.reference, data.placement);
-
-  data.offsets.popper.position = this.options.positionFixed ? 'fixed' : 'absolute';
-
-  // run the modifiers
-  data = runModifiers(this.modifiers, data);
-
-  // the first `update` will call `onCreate` callback
-  // the other ones will call `onUpdate` callback
-  if (!this.state.isCreated) {
-    this.state.isCreated = true;
-    this.options.onCreate(data);
-  } else {
-    this.options.onUpdate(data);
-  }
-}
-
-/**
- * Helper used to know if the given modifier is enabled.
- * @method
- * @memberof Popper.Utils
- * @returns {Boolean}
- */
-function isModifierEnabled(modifiers, modifierName) {
-  return modifiers.some(function (_ref) {
-    var name = _ref.name,
-        enabled = _ref.enabled;
-    return enabled && name === modifierName;
-  });
-}
-
-/**
- * Get the prefixed supported property name
- * @method
- * @memberof Popper.Utils
- * @argument {String} property (camelCase)
- * @returns {String} prefixed property (camelCase or PascalCase, depending on the vendor prefix)
- */
-function getSupportedPropertyName(property) {
-  var prefixes = [false, 'ms', 'Webkit', 'Moz', 'O'];
-  var upperProp = property.charAt(0).toUpperCase() + property.slice(1);
-
-  for (var i = 0; i < prefixes.length; i++) {
-    var prefix = prefixes[i];
-    var toCheck = prefix ? '' + prefix + upperProp : property;
-    if (typeof document.body.style[toCheck] !== 'undefined') {
-      return toCheck;
-    }
-  }
-  return null;
-}
-
-/**
- * Destroys the popper.
- * @method
- * @memberof Popper
- */
-function destroy() {
-  this.state.isDestroyed = true;
-
-  // touch DOM only if `applyStyle` modifier is enabled
-  if (isModifierEnabled(this.modifiers, 'applyStyle')) {
-    this.popper.removeAttribute('x-placement');
-    this.popper.style.position = '';
-    this.popper.style.top = '';
-    this.popper.style.left = '';
-    this.popper.style.right = '';
-    this.popper.style.bottom = '';
-    this.popper.style.willChange = '';
-    this.popper.style[getSupportedPropertyName('transform')] = '';
-  }
-
-  this.disableEventListeners();
-
-  // remove the popper if user explicity asked for the deletion on destroy
-  // do not use `remove` because IE11 doesn't support it
-  if (this.options.removeOnDestroy) {
-    this.popper.parentNode.removeChild(this.popper);
-  }
-  return this;
-}
-
-/**
- * Get the window associated with the element
- * @argument {Element} element
- * @returns {Window}
- */
-function getWindow(element) {
-  var ownerDocument = element.ownerDocument;
-  return ownerDocument ? ownerDocument.defaultView : window;
-}
-
-function attachToScrollParents(scrollParent, event, callback, scrollParents) {
-  var isBody = scrollParent.nodeName === 'BODY';
-  var target = isBody ? scrollParent.ownerDocument.defaultView : scrollParent;
-  target.addEventListener(event, callback, { passive: true });
-
-  if (!isBody) {
-    attachToScrollParents(getScrollParent(target.parentNode), event, callback, scrollParents);
-  }
-  scrollParents.push(target);
-}
-
-/**
- * Setup needed event listeners used to update the popper position
- * @method
- * @memberof Popper.Utils
- * @private
- */
-function setupEventListeners(reference, options, state, updateBound) {
-  // Resize event listener on window
-  state.updateBound = updateBound;
-  getWindow(reference).addEventListener('resize', state.updateBound, { passive: true });
-
-  // Scroll event listener on scroll parents
-  var scrollElement = getScrollParent(reference);
-  attachToScrollParents(scrollElement, 'scroll', state.updateBound, state.scrollParents);
-  state.scrollElement = scrollElement;
-  state.eventsEnabled = true;
-
-  return state;
-}
-
-/**
- * It will add resize/scroll events and start recalculating
- * position of the popper element when they are triggered.
- * @method
- * @memberof Popper
- */
-function enableEventListeners() {
-  if (!this.state.eventsEnabled) {
-    this.state = setupEventListeners(this.reference, this.options, this.state, this.scheduleUpdate);
-  }
-}
-
-/**
- * Remove event listeners used to update the popper position
- * @method
- * @memberof Popper.Utils
- * @private
- */
-function removeEventListeners(reference, state) {
-  // Remove resize event listener on window
-  getWindow(reference).removeEventListener('resize', state.updateBound);
-
-  // Remove scroll event listener on scroll parents
-  state.scrollParents.forEach(function (target) {
-    target.removeEventListener('scroll', state.updateBound);
-  });
-
-  // Reset state
-  state.updateBound = null;
-  state.scrollParents = [];
-  state.scrollElement = null;
-  state.eventsEnabled = false;
-  return state;
-}
-
-/**
- * It will remove resize/scroll events and won't recalculate popper position
- * when they are triggered. It also won't trigger `onUpdate` callback anymore,
- * unless you call `update` method manually.
- * @method
- * @memberof Popper
- */
-function disableEventListeners() {
-  if (this.state.eventsEnabled) {
-    cancelAnimationFrame(this.scheduleUpdate);
-    this.state = removeEventListeners(this.reference, this.state);
-  }
-}
-
-/**
- * Tells if a given input is a number
- * @method
- * @memberof Popper.Utils
- * @param {*} input to check
- * @return {Boolean}
- */
-function isNumeric(n) {
-  return n !== '' && !isNaN(parseFloat(n)) && isFinite(n);
-}
-
-/**
- * Set the style to the given popper
- * @method
- * @memberof Popper.Utils
- * @argument {Element} element - Element to apply the style to
- * @argument {Object} styles
- * Object with a list of properties and values which will be applied to the element
- */
-function setStyles(element, styles) {
-  Object.keys(styles).forEach(function (prop) {
-    var unit = '';
-    // add unit if the value is numeric and is one of the following
-    if (['width', 'height', 'top', 'right', 'bottom', 'left'].indexOf(prop) !== -1 && isNumeric(styles[prop])) {
-      unit = 'px';
-    }
-    element.style[prop] = styles[prop] + unit;
-  });
-}
-
-/**
- * Set the attributes to the given popper
- * @method
- * @memberof Popper.Utils
- * @argument {Element} element - Element to apply the attributes to
- * @argument {Object} styles
- * Object with a list of properties and values which will be applied to the element
- */
-function setAttributes(element, attributes) {
-  Object.keys(attributes).forEach(function (prop) {
-    var value = attributes[prop];
-    if (value !== false) {
-      element.setAttribute(prop, attributes[prop]);
-    } else {
-      element.removeAttribute(prop);
-    }
-  });
-}
-
-/**
- * @function
- * @memberof Modifiers
- * @argument {Object} data - The data object generated by `update` method
- * @argument {Object} data.styles - List of style properties - values to apply to popper element
- * @argument {Object} data.attributes - List of attribute properties - values to apply to popper element
- * @argument {Object} options - Modifiers configuration and options
- * @returns {Object} The same data object
- */
-function applyStyle(data) {
-  // any property present in `data.styles` will be applied to the popper,
-  // in this way we can make the 3rd party modifiers add custom styles to it
-  // Be aware, modifiers could override the properties defined in the previous
-  // lines of this modifier!
-  setStyles(data.instance.popper, data.styles);
-
-  // any property present in `data.attributes` will be applied to the popper,
-  // they will be set as HTML attributes of the element
-  setAttributes(data.instance.popper, data.attributes);
-
-  // if arrowElement is defined and arrowStyles has some properties
-  if (data.arrowElement && Object.keys(data.arrowStyles).length) {
-    setStyles(data.arrowElement, data.arrowStyles);
-  }
-
-  return data;
-}
-
-/**
- * Set the x-placement attribute before everything else because it could be used
- * to add margins to the popper margins needs to be calculated to get the
- * correct popper offsets.
- * @method
- * @memberof Popper.modifiers
- * @param {HTMLElement} reference - The reference element used to position the popper
- * @param {HTMLElement} popper - The HTML element used as popper
- * @param {Object} options - Popper.js options
- */
-function applyStyleOnLoad(reference, popper, options, modifierOptions, state) {
-  // compute reference element offsets
-  var referenceOffsets = getReferenceOffsets(state, popper, reference, options.positionFixed);
-
-  // compute auto placement, store placement inside the data object,
-  // modifiers will be able to edit `placement` if needed
-  // and refer to originalPlacement to know the original value
-  var placement = computeAutoPlacement(options.placement, referenceOffsets, popper, reference, options.modifiers.flip.boundariesElement, options.modifiers.flip.padding);
-
-  popper.setAttribute('x-placement', placement);
-
-  // Apply `position` to popper before anything else because
-  // without the position applied we can't guarantee correct computations
-  setStyles(popper, { position: options.positionFixed ? 'fixed' : 'absolute' });
-
-  return options;
-}
-
-/**
- * @function
- * @memberof Popper.Utils
- * @argument {Object} data - The data object generated by `update` method
- * @argument {Boolean} shouldRound - If the offsets should be rounded at all
- * @returns {Object} The popper's position offsets rounded
- *
- * The tale of pixel-perfect positioning. It's still not 100% perfect, but as
- * good as it can be within reason.
- * Discussion here: https://github.com/FezVrasta/popper.js/pull/715
- *
- * Low DPI screens cause a popper to be blurry if not using full pixels (Safari
- * as well on High DPI screens).
- *
- * Firefox prefers no rounding for positioning and does not have blurriness on
- * high DPI screens.
- *
- * Only horizontal placement and left/right values need to be considered.
- */
-function getRoundedOffsets(data, shouldRound) {
-  var _data$offsets = data.offsets,
-      popper = _data$offsets.popper,
-      reference = _data$offsets.reference;
-  var round = Math.round,
-      floor = Math.floor;
-
-  var noRound = function noRound(v) {
-    return v;
-  };
-
-  var referenceWidth = round(reference.width);
-  var popperWidth = round(popper.width);
-
-  var isVertical = ['left', 'right'].indexOf(data.placement) !== -1;
-  var isVariation = data.placement.indexOf('-') !== -1;
-  var sameWidthParity = referenceWidth % 2 === popperWidth % 2;
-  var bothOddWidth = referenceWidth % 2 === 1 && popperWidth % 2 === 1;
-
-  var horizontalToInteger = !shouldRound ? noRound : isVertical || isVariation || sameWidthParity ? round : floor;
-  var verticalToInteger = !shouldRound ? noRound : round;
-
-  return {
-    left: horizontalToInteger(bothOddWidth && !isVariation && shouldRound ? popper.left - 1 : popper.left),
-    top: verticalToInteger(popper.top),
-    bottom: verticalToInteger(popper.bottom),
-    right: horizontalToInteger(popper.right)
-  };
-}
-
-var isFirefox = isBrowser && /Firefox/i.test(navigator.userAgent);
-
-/**
- * @function
- * @memberof Modifiers
- * @argument {Object} data - The data object generated by `update` method
- * @argument {Object} options - Modifiers configuration and options
- * @returns {Object} The data object, properly modified
- */
-function computeStyle(data, options) {
-  var x = options.x,
-      y = options.y;
-  var popper = data.offsets.popper;
-
-  // Remove this legacy support in Popper.js v2
-
-  var legacyGpuAccelerationOption = find(data.instance.modifiers, function (modifier) {
-    return modifier.name === 'applyStyle';
-  }).gpuAcceleration;
-  if (legacyGpuAccelerationOption !== undefined) {
-    console.warn('WARNING: `gpuAcceleration` option moved to `computeStyle` modifier and will not be supported in future versions of Popper.js!');
-  }
-  var gpuAcceleration = legacyGpuAccelerationOption !== undefined ? legacyGpuAccelerationOption : options.gpuAcceleration;
-
-  var offsetParent = getOffsetParent(data.instance.popper);
-  var offsetParentRect = getBoundingClientRect(offsetParent);
-
-  // Styles
-  var styles = {
-    position: popper.position
-  };
-
-  var offsets = getRoundedOffsets(data, window.devicePixelRatio < 2 || !isFirefox);
-
-  var sideA = x === 'bottom' ? 'top' : 'bottom';
-  var sideB = y === 'right' ? 'left' : 'right';
-
-  // if gpuAcceleration is set to `true` and transform is supported,
-  //  we use `translate3d` to apply the position to the popper we
-  // automatically use the supported prefixed version if needed
-  var prefixedProperty = getSupportedPropertyName('transform');
-
-  // now, let's make a step back and look at this code closely (wtf?)
-  // If the content of the popper grows once it's been positioned, it
-  // may happen that the popper gets misplaced because of the new content
-  // overflowing its reference element
-  // To avoid this problem, we provide two options (x and y), which allow
-  // the consumer to define the offset origin.
-  // If we position a popper on top of a reference element, we can set
-  // `x` to `top` to make the popper grow towards its top instead of
-  // its bottom.
-  var left = void 0,
-      top = void 0;
-  if (sideA === 'bottom') {
-    // when offsetParent is <html> the positioning is relative to the bottom of the screen (excluding the scrollbar)
-    // and not the bottom of the html element
-    if (offsetParent.nodeName === 'HTML') {
-      top = -offsetParent.clientHeight + offsets.bottom;
-    } else {
-      top = -offsetParentRect.height + offsets.bottom;
-    }
-  } else {
-    top = offsets.top;
-  }
-  if (sideB === 'right') {
-    if (offsetParent.nodeName === 'HTML') {
-      left = -offsetParent.clientWidth + offsets.right;
-    } else {
-      left = -offsetParentRect.width + offsets.right;
-    }
-  } else {
-    left = offsets.left;
-  }
-  if (gpuAcceleration && prefixedProperty) {
-    styles[prefixedProperty] = 'translate3d(' + left + 'px, ' + top + 'px, 0)';
-    styles[sideA] = 0;
-    styles[sideB] = 0;
-    styles.willChange = 'transform';
-  } else {
-    // othwerise, we use the standard `top`, `left`, `bottom` and `right` properties
-    var invertTop = sideA === 'bottom' ? -1 : 1;
-    var invertLeft = sideB === 'right' ? -1 : 1;
-    styles[sideA] = top * invertTop;
-    styles[sideB] = left * invertLeft;
-    styles.willChange = sideA + ', ' + sideB;
-  }
-
-  // Attributes
-  var attributes = {
-    'x-placement': data.placement
-  };
-
-  // Update `data` attributes, styles and arrowStyles
-  data.attributes = _extends({}, attributes, data.attributes);
-  data.styles = _extends({}, styles, data.styles);
-  data.arrowStyles = _extends({}, data.offsets.arrow, data.arrowStyles);
-
-  return data;
-}
-
-/**
- * Helper used to know if the given modifier depends from another one.<br />
- * It checks if the needed modifier is listed and enabled.
- * @method
- * @memberof Popper.Utils
- * @param {Array} modifiers - list of modifiers
- * @param {String} requestingName - name of requesting modifier
- * @param {String} requestedName - name of requested modifier
- * @returns {Boolean}
- */
-function isModifierRequired(modifiers, requestingName, requestedName) {
-  var requesting = find(modifiers, function (_ref) {
-    var name = _ref.name;
-    return name === requestingName;
-  });
-
-  var isRequired = !!requesting && modifiers.some(function (modifier) {
-    return modifier.name === requestedName && modifier.enabled && modifier.order < requesting.order;
-  });
-
-  if (!isRequired) {
-    var _requesting = '`' + requestingName + '`';
-    var requested = '`' + requestedName + '`';
-    console.warn(requested + ' modifier is required by ' + _requesting + ' modifier in order to work, be sure to include it before ' + _requesting + '!');
-  }
-  return isRequired;
-}
-
-/**
- * @function
- * @memberof Modifiers
- * @argument {Object} data - The data object generated by update method
- * @argument {Object} options - Modifiers configuration and options
- * @returns {Object} The data object, properly modified
- */
-function arrow(data, options) {
-  var _data$offsets$arrow;
-
-  // arrow depends on keepTogether in order to work
-  if (!isModifierRequired(data.instance.modifiers, 'arrow', 'keepTogether')) {
-    return data;
-  }
-
-  var arrowElement = options.element;
-
-  // if arrowElement is a string, suppose it's a CSS selector
-  if (typeof arrowElement === 'string') {
-    arrowElement = data.instance.popper.querySelector(arrowElement);
-
-    // if arrowElement is not found, don't run the modifier
-    if (!arrowElement) {
-      return data;
-    }
-  } else {
-    // if the arrowElement isn't a query selector we must check that the
-    // provided DOM node is child of its popper node
-    if (!data.instance.popper.contains(arrowElement)) {
-      console.warn('WARNING: `arrow.element` must be child of its popper element!');
-      return data;
-    }
-  }
-
-  var placement = data.placement.split('-')[0];
-  var _data$offsets = data.offsets,
-      popper = _data$offsets.popper,
-      reference = _data$offsets.reference;
-
-  var isVertical = ['left', 'right'].indexOf(placement) !== -1;
-
-  var len = isVertical ? 'height' : 'width';
-  var sideCapitalized = isVertical ? 'Top' : 'Left';
-  var side = sideCapitalized.toLowerCase();
-  var altSide = isVertical ? 'left' : 'top';
-  var opSide = isVertical ? 'bottom' : 'right';
-  var arrowElementSize = getOuterSizes(arrowElement)[len];
-
-  //
-  // extends keepTogether behavior making sure the popper and its
-  // reference have enough pixels in conjunction
-  //
-
-  // top/left side
-  if (reference[opSide] - arrowElementSize < popper[side]) {
-    data.offsets.popper[side] -= popper[side] - (reference[opSide] - arrowElementSize);
-  }
-  // bottom/right side
-  if (reference[side] + arrowElementSize > popper[opSide]) {
-    data.offsets.popper[side] += reference[side] + arrowElementSize - popper[opSide];
-  }
-  data.offsets.popper = getClientRect(data.offsets.popper);
-
-  // compute center of the popper
-  var center = reference[side] + reference[len] / 2 - arrowElementSize / 2;
-
-  // Compute the sideValue using the updated popper offsets
-  // take popper margin in account because we don't have this info available
-  var css = getStyleComputedProperty(data.instance.popper);
-  var popperMarginSide = parseFloat(css['margin' + sideCapitalized], 10);
-  var popperBorderSide = parseFloat(css['border' + sideCapitalized + 'Width'], 10);
-  var sideValue = center - data.offsets.popper[side] - popperMarginSide - popperBorderSide;
-
-  // prevent arrowElement from being placed not contiguously to its popper
-  sideValue = Math.max(Math.min(popper[len] - arrowElementSize, sideValue), 0);
-
-  data.arrowElement = arrowElement;
-  data.offsets.arrow = (_data$offsets$arrow = {}, defineProperty(_data$offsets$arrow, side, Math.round(sideValue)), defineProperty(_data$offsets$arrow, altSide, ''), _data$offsets$arrow);
-
-  return data;
-}
-
-/**
- * Get the opposite placement variation of the given one
- * @method
- * @memberof Popper.Utils
- * @argument {String} placement variation
- * @returns {String} flipped placement variation
- */
-function getOppositeVariation(variation) {
-  if (variation === 'end') {
-    return 'start';
-  } else if (variation === 'start') {
-    return 'end';
-  }
-  return variation;
-}
-
-/**
- * List of accepted placements to use as values of the `placement` option.<br />
- * Valid placements are:
- * - `auto`
- * - `top`
- * - `right`
- * - `bottom`
- * - `left`
- *
- * Each placement can have a variation from this list:
- * - `-start`
- * - `-end`
- *
- * Variations are interpreted easily if you think of them as the left to right
- * written languages. Horizontally (`top` and `bottom`), `start` is left and `end`
- * is right.<br />
- * Vertically (`left` and `right`), `start` is top and `end` is bottom.
- *
- * Some valid examples are:
- * - `top-end` (on top of reference, right aligned)
- * - `right-start` (on right of reference, top aligned)
- * - `bottom` (on bottom, centered)
- * - `auto-end` (on the side with more space available, alignment depends by placement)
- *
- * @static
- * @type {Array}
- * @enum {String}
- * @readonly
- * @method placements
- * @memberof Popper
- */
-var placements = ['auto-start', 'auto', 'auto-end', 'top-start', 'top', 'top-end', 'right-start', 'right', 'right-end', 'bottom-end', 'bottom', 'bottom-start', 'left-end', 'left', 'left-start'];
-
-// Get rid of `auto` `auto-start` and `auto-end`
-var validPlacements = placements.slice(3);
-
-/**
- * Given an initial placement, returns all the subsequent placements
- * clockwise (or counter-clockwise).
- *
- * @method
- * @memberof Popper.Utils
- * @argument {String} placement - A valid placement (it accepts variations)
- * @argument {Boolean} counter - Set to true to walk the placements counterclockwise
- * @returns {Array} placements including their variations
- */
-function clockwise(placement) {
-  var counter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-  var index = validPlacements.indexOf(placement);
-  var arr = validPlacements.slice(index + 1).concat(validPlacements.slice(0, index));
-  return counter ? arr.reverse() : arr;
-}
-
-var BEHAVIORS = {
-  FLIP: 'flip',
-  CLOCKWISE: 'clockwise',
-  COUNTERCLOCKWISE: 'counterclockwise'
-};
-
-/**
- * @function
- * @memberof Modifiers
- * @argument {Object} data - The data object generated by update method
- * @argument {Object} options - Modifiers configuration and options
- * @returns {Object} The data object, properly modified
- */
-function flip(data, options) {
-  // if `inner` modifier is enabled, we can't use the `flip` modifier
-  if (isModifierEnabled(data.instance.modifiers, 'inner')) {
-    return data;
-  }
-
-  if (data.flipped && data.placement === data.originalPlacement) {
-    // seems like flip is trying to loop, probably there's not enough space on any of the flippable sides
-    return data;
-  }
-
-  var boundaries = getBoundaries(data.instance.popper, data.instance.reference, options.padding, options.boundariesElement, data.positionFixed);
-
-  var placement = data.placement.split('-')[0];
-  var placementOpposite = getOppositePlacement(placement);
-  var variation = data.placement.split('-')[1] || '';
-
-  var flipOrder = [];
-
-  switch (options.behavior) {
-    case BEHAVIORS.FLIP:
-      flipOrder = [placement, placementOpposite];
-      break;
-    case BEHAVIORS.CLOCKWISE:
-      flipOrder = clockwise(placement);
-      break;
-    case BEHAVIORS.COUNTERCLOCKWISE:
-      flipOrder = clockwise(placement, true);
-      break;
-    default:
-      flipOrder = options.behavior;
-  }
-
-  flipOrder.forEach(function (step, index) {
-    if (placement !== step || flipOrder.length === index + 1) {
-      return data;
-    }
-
-    placement = data.placement.split('-')[0];
-    placementOpposite = getOppositePlacement(placement);
-
-    var popperOffsets = data.offsets.popper;
-    var refOffsets = data.offsets.reference;
-
-    // using floor because the reference offsets may contain decimals we are not going to consider here
-    var floor = Math.floor;
-    var overlapsRef = placement === 'left' && floor(popperOffsets.right) > floor(refOffsets.left) || placement === 'right' && floor(popperOffsets.left) < floor(refOffsets.right) || placement === 'top' && floor(popperOffsets.bottom) > floor(refOffsets.top) || placement === 'bottom' && floor(popperOffsets.top) < floor(refOffsets.bottom);
-
-    var overflowsLeft = floor(popperOffsets.left) < floor(boundaries.left);
-    var overflowsRight = floor(popperOffsets.right) > floor(boundaries.right);
-    var overflowsTop = floor(popperOffsets.top) < floor(boundaries.top);
-    var overflowsBottom = floor(popperOffsets.bottom) > floor(boundaries.bottom);
-
-    var overflowsBoundaries = placement === 'left' && overflowsLeft || placement === 'right' && overflowsRight || placement === 'top' && overflowsTop || placement === 'bottom' && overflowsBottom;
-
-    // flip the variation if required
-    var isVertical = ['top', 'bottom'].indexOf(placement) !== -1;
-
-    // flips variation if reference element overflows boundaries
-    var flippedVariationByRef = !!options.flipVariations && (isVertical && variation === 'start' && overflowsLeft || isVertical && variation === 'end' && overflowsRight || !isVertical && variation === 'start' && overflowsTop || !isVertical && variation === 'end' && overflowsBottom);
-
-    // flips variation if popper content overflows boundaries
-    var flippedVariationByContent = !!options.flipVariationsByContent && (isVertical && variation === 'start' && overflowsRight || isVertical && variation === 'end' && overflowsLeft || !isVertical && variation === 'start' && overflowsBottom || !isVertical && variation === 'end' && overflowsTop);
-
-    var flippedVariation = flippedVariationByRef || flippedVariationByContent;
-
-    if (overlapsRef || overflowsBoundaries || flippedVariation) {
-      // this boolean to detect any flip loop
-      data.flipped = true;
-
-      if (overlapsRef || overflowsBoundaries) {
-        placement = flipOrder[index + 1];
-      }
-
-      if (flippedVariation) {
-        variation = getOppositeVariation(variation);
-      }
-
-      data.placement = placement + (variation ? '-' + variation : '');
-
-      // this object contains `position`, we want to preserve it along with
-      // any additional property we may add in the future
-      data.offsets.popper = _extends({}, data.offsets.popper, getPopperOffsets(data.instance.popper, data.offsets.reference, data.placement));
-
-      data = runModifiers(data.instance.modifiers, data, 'flip');
-    }
-  });
-  return data;
-}
-
-/**
- * @function
- * @memberof Modifiers
- * @argument {Object} data - The data object generated by update method
- * @argument {Object} options - Modifiers configuration and options
- * @returns {Object} The data object, properly modified
- */
-function keepTogether(data) {
-  var _data$offsets = data.offsets,
-      popper = _data$offsets.popper,
-      reference = _data$offsets.reference;
-
-  var placement = data.placement.split('-')[0];
-  var floor = Math.floor;
-  var isVertical = ['top', 'bottom'].indexOf(placement) !== -1;
-  var side = isVertical ? 'right' : 'bottom';
-  var opSide = isVertical ? 'left' : 'top';
-  var measurement = isVertical ? 'width' : 'height';
-
-  if (popper[side] < floor(reference[opSide])) {
-    data.offsets.popper[opSide] = floor(reference[opSide]) - popper[measurement];
-  }
-  if (popper[opSide] > floor(reference[side])) {
-    data.offsets.popper[opSide] = floor(reference[side]);
-  }
-
-  return data;
-}
-
-/**
- * Converts a string containing value + unit into a px value number
- * @function
- * @memberof {modifiers~offset}
- * @private
- * @argument {String} str - Value + unit string
- * @argument {String} measurement - `height` or `width`
- * @argument {Object} popperOffsets
- * @argument {Object} referenceOffsets
- * @returns {Number|String}
- * Value in pixels, or original string if no values were extracted
- */
-function toValue(str, measurement, popperOffsets, referenceOffsets) {
-  // separate value from unit
-  var split = str.match(/((?:\-|\+)?\d*\.?\d*)(.*)/);
-  var value = +split[1];
-  var unit = split[2];
-
-  // If it's not a number it's an operator, I guess
-  if (!value) {
-    return str;
-  }
-
-  if (unit.indexOf('%') === 0) {
-    var element = void 0;
-    switch (unit) {
-      case '%p':
-        element = popperOffsets;
-        break;
-      case '%':
-      case '%r':
-      default:
-        element = referenceOffsets;
-    }
-
-    var rect = getClientRect(element);
-    return rect[measurement] / 100 * value;
-  } else if (unit === 'vh' || unit === 'vw') {
-    // if is a vh or vw, we calculate the size based on the viewport
-    var size = void 0;
-    if (unit === 'vh') {
-      size = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-    } else {
-      size = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-    }
-    return size / 100 * value;
-  } else {
-    // if is an explicit pixel unit, we get rid of the unit and keep the value
-    // if is an implicit unit, it's px, and we return just the value
-    return value;
-  }
-}
-
-/**
- * Parse an `offset` string to extrapolate `x` and `y` numeric offsets.
- * @function
- * @memberof {modifiers~offset}
- * @private
- * @argument {String} offset
- * @argument {Object} popperOffsets
- * @argument {Object} referenceOffsets
- * @argument {String} basePlacement
- * @returns {Array} a two cells array with x and y offsets in numbers
- */
-function parseOffset(offset, popperOffsets, referenceOffsets, basePlacement) {
-  var offsets = [0, 0];
-
-  // Use height if placement is left or right and index is 0 otherwise use width
-  // in this way the first offset will use an axis and the second one
-  // will use the other one
-  var useHeight = ['right', 'left'].indexOf(basePlacement) !== -1;
-
-  // Split the offset string to obtain a list of values and operands
-  // The regex addresses values with the plus or minus sign in front (+10, -20, etc)
-  var fragments = offset.split(/(\+|\-)/).map(function (frag) {
-    return frag.trim();
-  });
-
-  // Detect if the offset string contains a pair of values or a single one
-  // they could be separated by comma or space
-  var divider = fragments.indexOf(find(fragments, function (frag) {
-    return frag.search(/,|\s/) !== -1;
-  }));
-
-  if (fragments[divider] && fragments[divider].indexOf(',') === -1) {
-    console.warn('Offsets separated by white space(s) are deprecated, use a comma (,) instead.');
-  }
-
-  // If divider is found, we divide the list of values and operands to divide
-  // them by ofset X and Y.
-  var splitRegex = /\s*,\s*|\s+/;
-  var ops = divider !== -1 ? [fragments.slice(0, divider).concat([fragments[divider].split(splitRegex)[0]]), [fragments[divider].split(splitRegex)[1]].concat(fragments.slice(divider + 1))] : [fragments];
-
-  // Convert the values with units to absolute pixels to allow our computations
-  ops = ops.map(function (op, index) {
-    // Most of the units rely on the orientation of the popper
-    var measurement = (index === 1 ? !useHeight : useHeight) ? 'height' : 'width';
-    var mergeWithPrevious = false;
-    return op
-    // This aggregates any `+` or `-` sign that aren't considered operators
-    // e.g.: 10 + +5 => [10, +, +5]
-    .reduce(function (a, b) {
-      if (a[a.length - 1] === '' && ['+', '-'].indexOf(b) !== -1) {
-        a[a.length - 1] = b;
-        mergeWithPrevious = true;
-        return a;
-      } else if (mergeWithPrevious) {
-        a[a.length - 1] += b;
-        mergeWithPrevious = false;
-        return a;
-      } else {
-        return a.concat(b);
-      }
-    }, [])
-    // Here we convert the string values into number values (in px)
-    .map(function (str) {
-      return toValue(str, measurement, popperOffsets, referenceOffsets);
-    });
-  });
-
-  // Loop trough the offsets arrays and execute the operations
-  ops.forEach(function (op, index) {
-    op.forEach(function (frag, index2) {
-      if (isNumeric(frag)) {
-        offsets[index] += frag * (op[index2 - 1] === '-' ? -1 : 1);
-      }
-    });
-  });
-  return offsets;
-}
-
-/**
- * @function
- * @memberof Modifiers
- * @argument {Object} data - The data object generated by update method
- * @argument {Object} options - Modifiers configuration and options
- * @argument {Number|String} options.offset=0
- * The offset value as described in the modifier description
- * @returns {Object} The data object, properly modified
- */
-function offset(data, _ref) {
-  var offset = _ref.offset;
-  var placement = data.placement,
-      _data$offsets = data.offsets,
-      popper = _data$offsets.popper,
-      reference = _data$offsets.reference;
-
-  var basePlacement = placement.split('-')[0];
-
-  var offsets = void 0;
-  if (isNumeric(+offset)) {
-    offsets = [+offset, 0];
-  } else {
-    offsets = parseOffset(offset, popper, reference, basePlacement);
-  }
-
-  if (basePlacement === 'left') {
-    popper.top += offsets[0];
-    popper.left -= offsets[1];
-  } else if (basePlacement === 'right') {
-    popper.top += offsets[0];
-    popper.left += offsets[1];
-  } else if (basePlacement === 'top') {
-    popper.left += offsets[0];
-    popper.top -= offsets[1];
-  } else if (basePlacement === 'bottom') {
-    popper.left += offsets[0];
-    popper.top += offsets[1];
-  }
-
-  data.popper = popper;
-  return data;
-}
-
-/**
- * @function
- * @memberof Modifiers
- * @argument {Object} data - The data object generated by `update` method
- * @argument {Object} options - Modifiers configuration and options
- * @returns {Object} The data object, properly modified
- */
-function preventOverflow(data, options) {
-  var boundariesElement = options.boundariesElement || getOffsetParent(data.instance.popper);
-
-  // If offsetParent is the reference element, we really want to
-  // go one step up and use the next offsetParent as reference to
-  // avoid to make this modifier completely useless and look like broken
-  if (data.instance.reference === boundariesElement) {
-    boundariesElement = getOffsetParent(boundariesElement);
-  }
-
-  // NOTE: DOM access here
-  // resets the popper's position so that the document size can be calculated excluding
-  // the size of the popper element itself
-  var transformProp = getSupportedPropertyName('transform');
-  var popperStyles = data.instance.popper.style; // assignment to help minification
-  var top = popperStyles.top,
-      left = popperStyles.left,
-      transform = popperStyles[transformProp];
-
-  popperStyles.top = '';
-  popperStyles.left = '';
-  popperStyles[transformProp] = '';
-
-  var boundaries = getBoundaries(data.instance.popper, data.instance.reference, options.padding, boundariesElement, data.positionFixed);
-
-  // NOTE: DOM access here
-  // restores the original style properties after the offsets have been computed
-  popperStyles.top = top;
-  popperStyles.left = left;
-  popperStyles[transformProp] = transform;
-
-  options.boundaries = boundaries;
-
-  var order = options.priority;
-  var popper = data.offsets.popper;
-
-  var check = {
-    primary: function primary(placement) {
-      var value = popper[placement];
-      if (popper[placement] < boundaries[placement] && !options.escapeWithReference) {
-        value = Math.max(popper[placement], boundaries[placement]);
-      }
-      return defineProperty({}, placement, value);
-    },
-    secondary: function secondary(placement) {
-      var mainSide = placement === 'right' ? 'left' : 'top';
-      var value = popper[mainSide];
-      if (popper[placement] > boundaries[placement] && !options.escapeWithReference) {
-        value = Math.min(popper[mainSide], boundaries[placement] - (placement === 'right' ? popper.width : popper.height));
-      }
-      return defineProperty({}, mainSide, value);
-    }
-  };
-
-  order.forEach(function (placement) {
-    var side = ['left', 'top'].indexOf(placement) !== -1 ? 'primary' : 'secondary';
-    popper = _extends({}, popper, check[side](placement));
-  });
-
-  data.offsets.popper = popper;
-
-  return data;
-}
-
-/**
- * @function
- * @memberof Modifiers
- * @argument {Object} data - The data object generated by `update` method
- * @argument {Object} options - Modifiers configuration and options
- * @returns {Object} The data object, properly modified
- */
-function shift(data) {
-  var placement = data.placement;
-  var basePlacement = placement.split('-')[0];
-  var shiftvariation = placement.split('-')[1];
-
-  // if shift shiftvariation is specified, run the modifier
-  if (shiftvariation) {
-    var _data$offsets = data.offsets,
-        reference = _data$offsets.reference,
-        popper = _data$offsets.popper;
-
-    var isVertical = ['bottom', 'top'].indexOf(basePlacement) !== -1;
-    var side = isVertical ? 'left' : 'top';
-    var measurement = isVertical ? 'width' : 'height';
-
-    var shiftOffsets = {
-      start: defineProperty({}, side, reference[side]),
-      end: defineProperty({}, side, reference[side] + reference[measurement] - popper[measurement])
-    };
-
-    data.offsets.popper = _extends({}, popper, shiftOffsets[shiftvariation]);
-  }
-
-  return data;
-}
-
-/**
- * @function
- * @memberof Modifiers
- * @argument {Object} data - The data object generated by update method
- * @argument {Object} options - Modifiers configuration and options
- * @returns {Object} The data object, properly modified
- */
-function hide(data) {
-  if (!isModifierRequired(data.instance.modifiers, 'hide', 'preventOverflow')) {
-    return data;
-  }
-
-  var refRect = data.offsets.reference;
-  var bound = find(data.instance.modifiers, function (modifier) {
-    return modifier.name === 'preventOverflow';
-  }).boundaries;
-
-  if (refRect.bottom < bound.top || refRect.left > bound.right || refRect.top > bound.bottom || refRect.right < bound.left) {
-    // Avoid unnecessary DOM access if visibility hasn't changed
-    if (data.hide === true) {
-      return data;
-    }
-
-    data.hide = true;
-    data.attributes['x-out-of-boundaries'] = '';
-  } else {
-    // Avoid unnecessary DOM access if visibility hasn't changed
-    if (data.hide === false) {
-      return data;
-    }
-
-    data.hide = false;
-    data.attributes['x-out-of-boundaries'] = false;
-  }
-
-  return data;
-}
-
-/**
- * @function
- * @memberof Modifiers
- * @argument {Object} data - The data object generated by `update` method
- * @argument {Object} options - Modifiers configuration and options
- * @returns {Object} The data object, properly modified
- */
-function inner(data) {
-  var placement = data.placement;
-  var basePlacement = placement.split('-')[0];
-  var _data$offsets = data.offsets,
-      popper = _data$offsets.popper,
-      reference = _data$offsets.reference;
-
-  var isHoriz = ['left', 'right'].indexOf(basePlacement) !== -1;
-
-  var subtractLength = ['top', 'left'].indexOf(basePlacement) === -1;
-
-  popper[isHoriz ? 'left' : 'top'] = reference[basePlacement] - (subtractLength ? popper[isHoriz ? 'width' : 'height'] : 0);
-
-  data.placement = getOppositePlacement(placement);
-  data.offsets.popper = getClientRect(popper);
-
-  return data;
-}
-
-/**
- * Modifier function, each modifier can have a function of this type assigned
- * to its `fn` property.<br />
- * These functions will be called on each update, this means that you must
- * make sure they are performant enough to avoid performance bottlenecks.
- *
- * @function ModifierFn
- * @argument {dataObject} data - The data object generated by `update` method
- * @argument {Object} options - Modifiers configuration and options
- * @returns {dataObject} The data object, properly modified
- */
-
-/**
- * Modifiers are plugins used to alter the behavior of your poppers.<br />
- * Popper.js uses a set of 9 modifiers to provide all the basic functionalities
- * needed by the library.
- *
- * Usually you don't want to override the `order`, `fn` and `onLoad` props.
- * All the other properties are configurations that could be tweaked.
- * @namespace modifiers
- */
-var modifiers = {
-  /**
-   * Modifier used to shift the popper on the start or end of its reference
-   * element.<br />
-   * It will read the variation of the `placement` property.<br />
-   * It can be one either `-end` or `-start`.
-   * @memberof modifiers
-   * @inner
-   */
-  shift: {
-    /** @prop {number} order=100 - Index used to define the order of execution */
-    order: 100,
-    /** @prop {Boolean} enabled=true - Whether the modifier is enabled or not */
-    enabled: true,
-    /** @prop {ModifierFn} */
-    fn: shift
-  },
-
-  /**
-   * The `offset` modifier can shift your popper on both its axis.
-   *
-   * It accepts the following units:
-   * - `px` or unit-less, interpreted as pixels
-   * - `%` or `%r`, percentage relative to the length of the reference element
-   * - `%p`, percentage relative to the length of the popper element
-   * - `vw`, CSS viewport width unit
-   * - `vh`, CSS viewport height unit
-   *
-   * For length is intended the main axis relative to the placement of the popper.<br />
-   * This means that if the placement is `top` or `bottom`, the length will be the
-   * `width`. In case of `left` or `right`, it will be the `height`.
-   *
-   * You can provide a single value (as `Number` or `String`), or a pair of values
-   * as `String` divided by a comma or one (or more) white spaces.<br />
-   * The latter is a deprecated method because it leads to confusion and will be
-   * removed in v2.<br />
-   * Additionally, it accepts additions and subtractions between different units.
-   * Note that multiplications and divisions aren't supported.
-   *
-   * Valid examples are:
-   * ```
-   * 10
-   * '10%'
-   * '10, 10'
-   * '10%, 10'
-   * '10 + 10%'
-   * '10 - 5vh + 3%'
-   * '-10px + 5vh, 5px - 6%'
-   * ```
-   * > **NB**: If you desire to apply offsets to your poppers in a way that may make them overlap
-   * > with their reference element, unfortunately, you will have to disable the `flip` modifier.
-   * > You can read more on this at this [issue](https://github.com/FezVrasta/popper.js/issues/373).
-   *
-   * @memberof modifiers
-   * @inner
-   */
-  offset: {
-    /** @prop {number} order=200 - Index used to define the order of execution */
-    order: 200,
-    /** @prop {Boolean} enabled=true - Whether the modifier is enabled or not */
-    enabled: true,
-    /** @prop {ModifierFn} */
-    fn: offset,
-    /** @prop {Number|String} offset=0
-     * The offset value as described in the modifier description
-     */
-    offset: 0
-  },
-
-  /**
-   * Modifier used to prevent the popper from being positioned outside the boundary.
-   *
-   * A scenario exists where the reference itself is not within the boundaries.<br />
-   * We can say it has "escaped the boundaries" — or just "escaped".<br />
-   * In this case we need to decide whether the popper should either:
-   *
-   * - detach from the reference and remain "trapped" in the boundaries, or
-   * - if it should ignore the boundary and "escape with its reference"
-   *
-   * When `escapeWithReference` is set to`true` and reference is completely
-   * outside its boundaries, the popper will overflow (or completely leave)
-   * the boundaries in order to remain attached to the edge of the reference.
-   *
-   * @memberof modifiers
-   * @inner
-   */
-  preventOverflow: {
-    /** @prop {number} order=300 - Index used to define the order of execution */
-    order: 300,
-    /** @prop {Boolean} enabled=true - Whether the modifier is enabled or not */
-    enabled: true,
-    /** @prop {ModifierFn} */
-    fn: preventOverflow,
-    /**
-     * @prop {Array} [priority=['left','right','top','bottom']]
-     * Popper will try to prevent overflow following these priorities by default,
-     * then, it could overflow on the left and on top of the `boundariesElement`
-     */
-    priority: ['left', 'right', 'top', 'bottom'],
-    /**
-     * @prop {number} padding=5
-     * Amount of pixel used to define a minimum distance between the boundaries
-     * and the popper. This makes sure the popper always has a little padding
-     * between the edges of its container
-     */
-    padding: 5,
-    /**
-     * @prop {String|HTMLElement} boundariesElement='scrollParent'
-     * Boundaries used by the modifier. Can be `scrollParent`, `window`,
-     * `viewport` or any DOM element.
-     */
-    boundariesElement: 'scrollParent'
-  },
-
-  /**
-   * Modifier used to make sure the reference and its popper stay near each other
-   * without leaving any gap between the two. Especially useful when the arrow is
-   * enabled and you want to ensure that it points to its reference element.
-   * It cares only about the first axis. You can still have poppers with margin
-   * between the popper and its reference element.
-   * @memberof modifiers
-   * @inner
-   */
-  keepTogether: {
-    /** @prop {number} order=400 - Index used to define the order of execution */
-    order: 400,
-    /** @prop {Boolean} enabled=true - Whether the modifier is enabled or not */
-    enabled: true,
-    /** @prop {ModifierFn} */
-    fn: keepTogether
-  },
-
-  /**
-   * This modifier is used to move the `arrowElement` of the popper to make
-   * sure it is positioned between the reference element and its popper element.
-   * It will read the outer size of the `arrowElement` node to detect how many
-   * pixels of conjunction are needed.
-   *
-   * It has no effect if no `arrowElement` is provided.
-   * @memberof modifiers
-   * @inner
-   */
-  arrow: {
-    /** @prop {number} order=500 - Index used to define the order of execution */
-    order: 500,
-    /** @prop {Boolean} enabled=true - Whether the modifier is enabled or not */
-    enabled: true,
-    /** @prop {ModifierFn} */
-    fn: arrow,
-    /** @prop {String|HTMLElement} element='[x-arrow]' - Selector or node used as arrow */
-    element: '[x-arrow]'
-  },
-
-  /**
-   * Modifier used to flip the popper's placement when it starts to overlap its
-   * reference element.
-   *
-   * Requires the `preventOverflow` modifier before it in order to work.
-   *
-   * **NOTE:** this modifier will interrupt the current update cycle and will
-   * restart it if it detects the need to flip the placement.
-   * @memberof modifiers
-   * @inner
-   */
-  flip: {
-    /** @prop {number} order=600 - Index used to define the order of execution */
-    order: 600,
-    /** @prop {Boolean} enabled=true - Whether the modifier is enabled or not */
-    enabled: true,
-    /** @prop {ModifierFn} */
-    fn: flip,
-    /**
-     * @prop {String|Array} behavior='flip'
-     * The behavior used to change the popper's placement. It can be one of
-     * `flip`, `clockwise`, `counterclockwise` or an array with a list of valid
-     * placements (with optional variations)
-     */
-    behavior: 'flip',
-    /**
-     * @prop {number} padding=5
-     * The popper will flip if it hits the edges of the `boundariesElement`
-     */
-    padding: 5,
-    /**
-     * @prop {String|HTMLElement} boundariesElement='viewport'
-     * The element which will define the boundaries of the popper position.
-     * The popper will never be placed outside of the defined boundaries
-     * (except if `keepTogether` is enabled)
-     */
-    boundariesElement: 'viewport',
-    /**
-     * @prop {Boolean} flipVariations=false
-     * The popper will switch placement variation between `-start` and `-end` when
-     * the reference element overlaps its boundaries.
-     *
-     * The original placement should have a set variation.
-     */
-    flipVariations: false,
-    /**
-     * @prop {Boolean} flipVariationsByContent=false
-     * The popper will switch placement variation between `-start` and `-end` when
-     * the popper element overlaps its reference boundaries.
-     *
-     * The original placement should have a set variation.
-     */
-    flipVariationsByContent: false
-  },
-
-  /**
-   * Modifier used to make the popper flow toward the inner of the reference element.
-   * By default, when this modifier is disabled, the popper will be placed outside
-   * the reference element.
-   * @memberof modifiers
-   * @inner
-   */
-  inner: {
-    /** @prop {number} order=700 - Index used to define the order of execution */
-    order: 700,
-    /** @prop {Boolean} enabled=false - Whether the modifier is enabled or not */
-    enabled: false,
-    /** @prop {ModifierFn} */
-    fn: inner
-  },
-
-  /**
-   * Modifier used to hide the popper when its reference element is outside of the
-   * popper boundaries. It will set a `x-out-of-boundaries` attribute which can
-   * be used to hide with a CSS selector the popper when its reference is
-   * out of boundaries.
-   *
-   * Requires the `preventOverflow` modifier before it in order to work.
-   * @memberof modifiers
-   * @inner
-   */
-  hide: {
-    /** @prop {number} order=800 - Index used to define the order of execution */
-    order: 800,
-    /** @prop {Boolean} enabled=true - Whether the modifier is enabled or not */
-    enabled: true,
-    /** @prop {ModifierFn} */
-    fn: hide
-  },
-
-  /**
-   * Computes the style that will be applied to the popper element to gets
-   * properly positioned.
-   *
-   * Note that this modifier will not touch the DOM, it just prepares the styles
-   * so that `applyStyle` modifier can apply it. This separation is useful
-   * in case you need to replace `applyStyle` with a custom implementation.
-   *
-   * This modifier has `850` as `order` value to maintain backward compatibility
-   * with previous versions of Popper.js. Expect the modifiers ordering method
-   * to change in future major versions of the library.
-   *
-   * @memberof modifiers
-   * @inner
-   */
-  computeStyle: {
-    /** @prop {number} order=850 - Index used to define the order of execution */
-    order: 850,
-    /** @prop {Boolean} enabled=true - Whether the modifier is enabled or not */
-    enabled: true,
-    /** @prop {ModifierFn} */
-    fn: computeStyle,
-    /**
-     * @prop {Boolean} gpuAcceleration=true
-     * If true, it uses the CSS 3D transformation to position the popper.
-     * Otherwise, it will use the `top` and `left` properties
-     */
-    gpuAcceleration: true,
-    /**
-     * @prop {string} [x='bottom']
-     * Where to anchor the X axis (`bottom` or `top`). AKA X offset origin.
-     * Change this if your popper should grow in a direction different from `bottom`
-     */
-    x: 'bottom',
-    /**
-     * @prop {string} [x='left']
-     * Where to anchor the Y axis (`left` or `right`). AKA Y offset origin.
-     * Change this if your popper should grow in a direction different from `right`
-     */
-    y: 'right'
-  },
-
-  /**
-   * Applies the computed styles to the popper element.
-   *
-   * All the DOM manipulations are limited to this modifier. This is useful in case
-   * you want to integrate Popper.js inside a framework or view library and you
-   * want to delegate all the DOM manipulations to it.
-   *
-   * Note that if you disable this modifier, you must make sure the popper element
-   * has its position set to `absolute` before Popper.js can do its work!
-   *
-   * Just disable this modifier and define your own to achieve the desired effect.
-   *
-   * @memberof modifiers
-   * @inner
-   */
-  applyStyle: {
-    /** @prop {number} order=900 - Index used to define the order of execution */
-    order: 900,
-    /** @prop {Boolean} enabled=true - Whether the modifier is enabled or not */
-    enabled: true,
-    /** @prop {ModifierFn} */
-    fn: applyStyle,
-    /** @prop {Function} */
-    onLoad: applyStyleOnLoad,
-    /**
-     * @deprecated since version 1.10.0, the property moved to `computeStyle` modifier
-     * @prop {Boolean} gpuAcceleration=true
-     * If true, it uses the CSS 3D transformation to position the popper.
-     * Otherwise, it will use the `top` and `left` properties
-     */
-    gpuAcceleration: undefined
-  }
-};
-
-/**
- * The `dataObject` is an object containing all the information used by Popper.js.
- * This object is passed to modifiers and to the `onCreate` and `onUpdate` callbacks.
- * @name dataObject
- * @property {Object} data.instance The Popper.js instance
- * @property {String} data.placement Placement applied to popper
- * @property {String} data.originalPlacement Placement originally defined on init
- * @property {Boolean} data.flipped True if popper has been flipped by flip modifier
- * @property {Boolean} data.hide True if the reference element is out of boundaries, useful to know when to hide the popper
- * @property {HTMLElement} data.arrowElement Node used as arrow by arrow modifier
- * @property {Object} data.styles Any CSS property defined here will be applied to the popper. It expects the JavaScript nomenclature (eg. `marginBottom`)
- * @property {Object} data.arrowStyles Any CSS property defined here will be applied to the popper arrow. It expects the JavaScript nomenclature (eg. `marginBottom`)
- * @property {Object} data.boundaries Offsets of the popper boundaries
- * @property {Object} data.offsets The measurements of popper, reference and arrow elements
- * @property {Object} data.offsets.popper `top`, `left`, `width`, `height` values
- * @property {Object} data.offsets.reference `top`, `left`, `width`, `height` values
- * @property {Object} data.offsets.arrow] `top` and `left` offsets, only one of them will be different from 0
- */
-
-/**
- * Default options provided to Popper.js constructor.<br />
- * These can be overridden using the `options` argument of Popper.js.<br />
- * To override an option, simply pass an object with the same
- * structure of the `options` object, as the 3rd argument. For example:
- * ```
- * new Popper(ref, pop, {
- *   modifiers: {
- *     preventOverflow: { enabled: false }
- *   }
- * })
- * ```
- * @type {Object}
- * @static
- * @memberof Popper
- */
-var Defaults = {
-  /**
-   * Popper's placement.
-   * @prop {Popper.placements} placement='bottom'
-   */
-  placement: 'bottom',
-
-  /**
-   * Set this to true if you want popper to position it self in 'fixed' mode
-   * @prop {Boolean} positionFixed=false
-   */
-  positionFixed: false,
-
-  /**
-   * Whether events (resize, scroll) are initially enabled.
-   * @prop {Boolean} eventsEnabled=true
-   */
-  eventsEnabled: true,
-
-  /**
-   * Set to true if you want to automatically remove the popper when
-   * you call the `destroy` method.
-   * @prop {Boolean} removeOnDestroy=false
-   */
-  removeOnDestroy: false,
-
-  /**
-   * Callback called when the popper is created.<br />
-   * By default, it is set to no-op.<br />
-   * Access Popper.js instance with `data.instance`.
-   * @prop {onCreate}
-   */
-  onCreate: function onCreate() {},
-
-  /**
-   * Callback called when the popper is updated. This callback is not called
-   * on the initialization/creation of the popper, but only on subsequent
-   * updates.<br />
-   * By default, it is set to no-op.<br />
-   * Access Popper.js instance with `data.instance`.
-   * @prop {onUpdate}
-   */
-  onUpdate: function onUpdate() {},
-
-  /**
-   * List of modifiers used to modify the offsets before they are applied to the popper.
-   * They provide most of the functionalities of Popper.js.
-   * @prop {modifiers}
-   */
-  modifiers: modifiers
-};
-
-/**
- * @callback onCreate
- * @param {dataObject} data
- */
-
-/**
- * @callback onUpdate
- * @param {dataObject} data
- */
-
-// Utils
-// Methods
-var Popper = function () {
-  /**
-   * Creates a new Popper.js instance.
-   * @class Popper
-   * @param {Element|referenceObject} reference - The reference element used to position the popper
-   * @param {Element} popper - The HTML / XML element used as the popper
-   * @param {Object} options - Your custom options to override the ones defined in [Defaults](#defaults)
-   * @return {Object} instance - The generated Popper.js instance
-   */
-  function Popper(reference, popper) {
-    var _this = this;
-
-    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-    classCallCheck(this, Popper);
-
-    this.scheduleUpdate = function () {
-      return requestAnimationFrame(_this.update);
-    };
-
-    // make update() debounced, so that it only runs at most once-per-tick
-    this.update = debounce(this.update.bind(this));
-
-    // with {} we create a new object with the options inside it
-    this.options = _extends({}, Popper.Defaults, options);
-
-    // init state
-    this.state = {
-      isDestroyed: false,
-      isCreated: false,
-      scrollParents: []
-    };
-
-    // get reference and popper elements (allow jQuery wrappers)
-    this.reference = reference && reference.jquery ? reference[0] : reference;
-    this.popper = popper && popper.jquery ? popper[0] : popper;
-
-    // Deep merge modifiers options
-    this.options.modifiers = {};
-    Object.keys(_extends({}, Popper.Defaults.modifiers, options.modifiers)).forEach(function (name) {
-      _this.options.modifiers[name] = _extends({}, Popper.Defaults.modifiers[name] || {}, options.modifiers ? options.modifiers[name] : {});
-    });
-
-    // Refactoring modifiers' list (Object => Array)
-    this.modifiers = Object.keys(this.options.modifiers).map(function (name) {
-      return _extends({
-        name: name
-      }, _this.options.modifiers[name]);
-    })
-    // sort the modifiers by order
-    .sort(function (a, b) {
-      return a.order - b.order;
-    });
-
-    // modifiers have the ability to execute arbitrary code when Popper.js get inited
-    // such code is executed in the same order of its modifier
-    // they could add new properties to their options configuration
-    // BE AWARE: don't add options to `options.modifiers.name` but to `modifierOptions`!
-    this.modifiers.forEach(function (modifierOptions) {
-      if (modifierOptions.enabled && isFunction(modifierOptions.onLoad)) {
-        modifierOptions.onLoad(_this.reference, _this.popper, _this.options, modifierOptions, _this.state);
-      }
-    });
-
-    // fire the first update to position the popper in the right place
-    this.update();
-
-    var eventsEnabled = this.options.eventsEnabled;
-    if (eventsEnabled) {
-      // setup event listeners, they will take care of update the position in specific situations
-      this.enableEventListeners();
-    }
-
-    this.state.eventsEnabled = eventsEnabled;
-  }
-
-  // We can't use class properties because they don't get listed in the
-  // class prototype and break stuff like Sinon stubs
-
-
-  createClass(Popper, [{
-    key: 'update',
-    value: function update$$1() {
-      return update.call(this);
-    }
-  }, {
-    key: 'destroy',
-    value: function destroy$$1() {
-      return destroy.call(this);
-    }
-  }, {
-    key: 'enableEventListeners',
-    value: function enableEventListeners$$1() {
-      return enableEventListeners.call(this);
-    }
-  }, {
-    key: 'disableEventListeners',
-    value: function disableEventListeners$$1() {
-      return disableEventListeners.call(this);
-    }
-
-    /**
-     * Schedules an update. It will run on the next UI update available.
-     * @method scheduleUpdate
-     * @memberof Popper
-     */
-
-
-    /**
-     * Collection of utilities useful when writing custom modifiers.
-     * Starting from version 1.7, this method is available only if you
-     * include `popper-utils.js` before `popper.js`.
-     *
-     * **DEPRECATION**: This way to access PopperUtils is deprecated
-     * and will be removed in v2! Use the PopperUtils module directly instead.
-     * Due to the high instability of the methods contained in Utils, we can't
-     * guarantee them to follow semver. Use them at your own risk!
-     * @static
-     * @private
-     * @type {Object}
-     * @deprecated since version 1.8
-     * @member Utils
-     * @memberof Popper
-     */
-
-  }]);
-  return Popper;
-}();
-
-/**
- * The `referenceObject` is an object that provides an interface compatible with Popper.js
- * and lets you use it as replacement of a real DOM node.<br />
- * You can use this method to position a popper relatively to a set of coordinates
- * in case you don't have a DOM node to use as reference.
- *
- * ```
- * new Popper(referenceObject, popperNode);
- * ```
- *
- * NB: This feature isn't supported in Internet Explorer 10.
- * @name referenceObject
- * @property {Function} data.getBoundingClientRect
- * A function that returns a set of coordinates compatible with the native `getBoundingClientRect` method.
- * @property {number} data.clientWidth
- * An ES6 getter that will return the width of the virtual reference element.
- * @property {number} data.clientHeight
- * An ES6 getter that will return the height of the virtual reference element.
- */
-
-
-Popper.Utils = (typeof window !== 'undefined' ? window : global).PopperUtils;
-Popper.placements = placements;
-Popper.Defaults = Defaults;
-
-/* harmony default export */ __webpack_exports__["default"] = (Popper);
-//# sourceMappingURL=popper.js.map
-
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../webpack/buildin/global.js */ "./node_modules/webpack/buildin/global.js")))
-
-/***/ }),
-
 /***/ "./node_modules/process/browser.js":
 /*!*****************************************!*\
   !*** ./node_modules/process/browser.js ***!
@@ -22544,7 +19937,7 @@ var render = function() {
                             },
                             [
                               _c("v-icon", { attrs: { text: "", small: "" } }, [
-                                _vm._v("edit")
+                                _vm._v("mdi-pencil")
                               ])
                             ],
                             1
@@ -22568,7 +19961,7 @@ var render = function() {
                                 {
                                   attrs: { text: "", small: "", color: "info" }
                                 },
-                                [_vm._v("save")]
+                                [_vm._v("mdi-content-save")]
                               )
                             ],
                             1
@@ -22592,7 +19985,7 @@ var render = function() {
                                 {
                                   attrs: { text: "", small: "", color: "red" }
                                 },
-                                [_vm._v("close")]
+                                [_vm._v("mdi-close")]
                               )
                             ],
                             1
@@ -22620,7 +20013,7 @@ var render = function() {
                                       _c("v-text-field", {
                                         attrs: {
                                           label: "Name",
-                                          "prepend-icon": "person",
+                                          "prepend-icon": "mdi-account",
                                           rules: _vm.nameRules
                                         },
                                         model: {
@@ -22641,7 +20034,7 @@ var render = function() {
                                       _c("v-text-field", {
                                         attrs: {
                                           label: "Email",
-                                          "prepend-icon": "email",
+                                          "prepend-icon": "mdi-email",
                                           rules: _vm.emailRules
                                         },
                                         model: {
@@ -22671,7 +20064,7 @@ var render = function() {
                                     "v-list-item-icon",
                                     [
                                       _c("v-icon", { attrs: { text: "" } }, [
-                                        _vm._v("person")
+                                        _vm._v("mdi-account")
                                       ])
                                     ],
                                     1
@@ -22699,7 +20092,7 @@ var render = function() {
                                     "v-list-item-icon",
                                     [
                                       _c("v-icon", { attrs: { text: "" } }, [
-                                        _vm._v("email")
+                                        _vm._v("mdi-email")
                                       ])
                                     ],
                                     1
@@ -22750,7 +20143,7 @@ var render = function() {
                             },
                             [
                               _c("v-icon", { attrs: { text: "", small: "" } }, [
-                                _vm._v("edit")
+                                _vm._v("mdi-pencil")
                               ])
                             ],
                             1
@@ -22774,7 +20167,7 @@ var render = function() {
                                 {
                                   attrs: { text: "", small: "", color: "info" }
                                 },
-                                [_vm._v("save")]
+                                [_vm._v("mdi-content-save")]
                               )
                             ],
                             1
@@ -22798,7 +20191,7 @@ var render = function() {
                                 {
                                   attrs: { text: "", small: "", color: "red" }
                                 },
-                                [_vm._v("close")]
+                                [_vm._v("mdi-close")]
                               )
                             ],
                             1
@@ -22826,7 +20219,7 @@ var render = function() {
                                         attrs: {
                                           label: "Password",
                                           type: "password",
-                                          "prepend-icon": "lock",
+                                          "prepend-icon": "mdi-lock",
                                           rules: _vm.passwordRules
                                         },
                                         model: {
@@ -22848,7 +20241,7 @@ var render = function() {
                                         attrs: {
                                           label: "Confirm Password",
                                           type: "password",
-                                          "prepend-icon": "lock",
+                                          "prepend-icon": "mdi-lock",
                                           rules: _vm.passwordConfirmationRules
                                         },
                                         model: {
@@ -23000,30 +20393,49 @@ var render = function() {
                 [
                   _c(
                     "v-list",
-                    _vm._l(_vm.navItems, function(item, i) {
-                      return _c(
-                        "v-list-item",
-                        { key: i, attrs: { href: item.uri } },
-                        [
-                          _c(
-                            "v-list-item-action",
-                            [_c("v-icon", [_vm._v(_vm._s(item.icon))])],
-                            1
-                          ),
-                          _vm._v(" "),
-                          _c(
-                            "v-list-item-content",
+                    { attrs: { shaped: "" } },
+                    [
+                      _c(
+                        "v-list-item-group",
+                        {
+                          attrs: { color: "primary" },
+                          model: {
+                            value: _vm.item,
+                            callback: function($$v) {
+                              _vm.item = $$v
+                            },
+                            expression: "item"
+                          }
+                        },
+                        _vm._l(_vm.navItems, function(item, i) {
+                          return _c(
+                            "v-list-item",
+                            { key: i, attrs: { href: item.uri } },
                             [
-                              _c("v-list-item-title", {
-                                domProps: { textContent: _vm._s(item.title) }
-                              })
+                              _c(
+                                "v-list-item-action",
+                                [_c("v-icon", [_vm._v(_vm._s(item.icon))])],
+                                1
+                              ),
+                              _vm._v(" "),
+                              _c(
+                                "v-list-item-content",
+                                [
+                                  _c("v-list-item-title", {
+                                    domProps: {
+                                      textContent: _vm._s(item.title)
+                                    }
+                                  })
+                                ],
+                                1
+                              )
                             ],
                             1
                           )
-                        ],
+                        }),
                         1
                       )
-                    }),
+                    ],
                     1
                   )
                 ],
@@ -23059,7 +20471,7 @@ var render = function() {
                                             color: "grey lighten-1"
                                           }
                                         },
-                                        [_vm._v("settings")]
+                                        [_vm._v("mdi-settings")]
                                       )
                                     ],
                                     1
@@ -35515,7 +32927,8 @@ var __assign = undefined && undefined.__assign || function () {
         staticClass: 'v-alert__dismissible',
         props: {
           color: color,
-          icon: true
+          icon: true,
+          small: true
         },
         attrs: {
           'aria-label': this.$vuetify.lang.t(this.closeLabel)
@@ -35848,7 +33261,7 @@ var __assign = undefined && undefined.__assign || function () {
 
 
 
-var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_8__["default"])(_VToolbar_VToolbar__WEBPACK_IMPORTED_MODULE_1__["default"], _mixins_scrollable__WEBPACK_IMPORTED_MODULE_4__["default"], _mixins_ssr_bootable__WEBPACK_IMPORTED_MODULE_5__["default"], _mixins_toggleable__WEBPACK_IMPORTED_MODULE_6__["default"], Object(_mixins_applicationable__WEBPACK_IMPORTED_MODULE_3__["default"])('top', ['clippedLeft', 'clippedRight', 'computedHeight', 'computedTransform', 'invertedScroll', 'isExtended', 'isProminent', 'value']));
+var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_8__["default"])(_VToolbar_VToolbar__WEBPACK_IMPORTED_MODULE_1__["default"], _mixins_scrollable__WEBPACK_IMPORTED_MODULE_4__["default"], _mixins_ssr_bootable__WEBPACK_IMPORTED_MODULE_5__["default"], _mixins_toggleable__WEBPACK_IMPORTED_MODULE_6__["default"], Object(_mixins_applicationable__WEBPACK_IMPORTED_MODULE_3__["default"])('top', ['clippedLeft', 'clippedRight', 'computedHeight', 'invertedScroll', 'isExtended', 'isProminent', 'value']));
 /* @vue/component */
 
 /* harmony default export */ __webpack_exports__["default"] = (baseMixins.extend({
@@ -35946,9 +33359,14 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_8__["default"])(_V
     computedTransform: function computedTransform() {
       if (!this.canScroll || this.elevateOnScroll && this.currentScroll === 0) return 0;
       if (this.isActive) return 0;
-      return this.scrollOffScreen ? -this.computedHeight : -this.computedContentHeight;
+      var scrollOffScreen = this.scrollOffScreen ? this.computedHeight : this.computedContentHeight;
+      return this.bottom ? scrollOffScreen : -scrollOffScreen;
     },
     hideShadow: function hideShadow() {
+      if (this.elevateOnScroll && this.isExtended) {
+        return this.currentScroll < this.computedScrollThreshold;
+      }
+
       if (this.elevateOnScroll) {
         return this.currentScroll === 0 || this.computedTransform < 0;
       }
@@ -35977,6 +33395,16 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_8__["default"])(_V
   },
   watch: {
     canScroll: 'onScroll',
+    computedTransform: function computedTransform() {
+      // Normally we do not want the v-app-bar
+      // to update the application top value
+      // to avoid screen jump. However, in
+      // this situation, we must so that
+      // the clipped drawer can update
+      // its top value when scrolled
+      if (!this.canScroll || !this.clippedLeft && !this.clippedRight) return;
+      this.callUpdate();
+    },
     invertedScroll: function invertedScroll(val) {
       this.isActive = !val;
     }
@@ -36437,6 +33865,10 @@ var defaultMenuProps = __assign({}, _VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1_
       // interfers with native up/down behavior
       // instead activate the menu
       this.activateMenu();
+    },
+    selectItem: function selectItem(item) {
+      _VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.selectItem.call(this, item);
+      this.setSearch();
     },
     setSelectedItems: function setSelectedItems() {
       _VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.setSelectedItems.call(this); // #4273 Don't replace if searching
@@ -37515,7 +34947,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_8__["default"])(_V
         'v-btn--contained': this.contained,
         'v-btn--depressed': this.depressed || this.outlined,
         'v-btn--disabled': this.disabled,
-        'v-btn--fab': this.isRound,
+        'v-btn--fab': this.fab,
         'v-btn--fixed': this.fixed,
         'v-btn--flat': this.isFlat,
         'v-btn--icon': this.icon,
@@ -37602,7 +35034,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_8__["default"])(_V
     }
 
     data.attrs.value = ['string', 'number'].includes(_typeof(this.value)) ? this.value : JSON.stringify(this.value);
-    return h(tag, setColor(this.color, data), children);
+    return h(tag, this.disabled ? data : setColor(this.color, data), children);
   }
 }));
 
@@ -38521,8 +35953,7 @@ var __spread = undefined && undefined.__spread || function () {
       return this.$createElement(_VBtn__WEBPACK_IMPORTED_MODULE_1__["default"], {
         props: {
           color: color,
-          fab: !hasMonth,
-          rounded: hasMonth,
+          fab: true,
           depressed: true,
           small: true
         },
@@ -38740,10 +36171,11 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _calendar_with_events_sass__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./calendar-with-events.sass */ "./src/components/VCalendar/mixins/calendar-with-events.sass");
 /* harmony import */ var _calendar_with_events_sass__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_calendar_with_events_sass__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _calendar_base__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./calendar-base */ "./src/components/VCalendar/mixins/calendar-base.ts");
-/* harmony import */ var _util_props__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/props */ "./src/components/VCalendar/util/props.ts");
-/* harmony import */ var _util_timestamp__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../util/timestamp */ "./src/components/VCalendar/util/timestamp.ts");
-/* harmony import */ var _util_events__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/events */ "./src/components/VCalendar/util/events.ts");
+/* harmony import */ var _directives_ripple__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../directives/ripple */ "./src/directives/ripple/index.ts");
+/* harmony import */ var _calendar_base__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./calendar-base */ "./src/components/VCalendar/mixins/calendar-base.ts");
+/* harmony import */ var _util_props__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../util/props */ "./src/components/VCalendar/util/props.ts");
+/* harmony import */ var _util_timestamp__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/timestamp */ "./src/components/VCalendar/util/timestamp.ts");
+/* harmony import */ var _util_events__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../util/events */ "./src/components/VCalendar/util/events.ts");
 var __assign = undefined && undefined.__assign || function () {
   __assign = Object.assign || function (t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
@@ -38761,6 +36193,8 @@ var __assign = undefined && undefined.__assign || function () {
 }; // Styles
 
 
+ // Directives
+
  // Mixins
 
  // Util
@@ -38770,9 +36204,12 @@ var __assign = undefined && undefined.__assign || function () {
 
 /* @vue/component */
 
-/* harmony default export */ __webpack_exports__["default"] = (_calendar_base__WEBPACK_IMPORTED_MODULE_1__["default"].extend({
+/* harmony default export */ __webpack_exports__["default"] = (_calendar_base__WEBPACK_IMPORTED_MODULE_2__["default"].extend({
   name: 'calendar-with-events',
-  props: _util_props__WEBPACK_IMPORTED_MODULE_2__["default"].events,
+  directives: {
+    ripple: _directives_ripple__WEBPACK_IMPORTED_MODULE_1__["default"]
+  },
+  props: _util_props__WEBPACK_IMPORTED_MODULE_3__["default"].events,
   computed: {
     noEvents: function noEvents() {
       return this.events.length === 0;
@@ -38781,7 +36218,7 @@ var __assign = undefined && undefined.__assign || function () {
       var _this = this;
 
       return this.events.map(function (input, index) {
-        return Object(_util_events__WEBPACK_IMPORTED_MODULE_4__["parseEvent"])(input, index, _this.eventStart, _this.eventEnd);
+        return Object(_util_events__WEBPACK_IMPORTED_MODULE_5__["parseEvent"])(input, index, _this.eventStart, _this.eventEnd);
       });
     },
     eventColorFunction: function eventColorFunction() {
@@ -38920,7 +36357,7 @@ var __assign = undefined && undefined.__assign || function () {
       var eventMarginBottom = this.eventMarginBottom;
       var relativeOffset = (offset - index) * (eventHeight + eventMarginBottom); // 1 = margin bottom
 
-      var dayIdentifier = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_3__["getDayIdentifier"])(day);
+      var dayIdentifier = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_4__["getDayIdentifier"])(day);
       var start = dayIdentifier === event.startIdentifier;
       var end = dayIdentifier === event.endIdentifier;
       var scope = {
@@ -38956,7 +36393,7 @@ var __assign = undefined && undefined.__assign || function () {
           event = _a.event,
           columnCount = _a.columnCount,
           column = _a.column;
-      var dayIdentifier = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_3__["getDayIdentifier"])(day);
+      var dayIdentifier = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_4__["getDayIdentifier"])(day);
       var start = event.startIdentifier >= dayIdentifier;
       var end = event.endIdentifier > dayIdentifier;
       var top = start ? day.timeToY(event.start) : 0;
@@ -39032,37 +36469,37 @@ var __assign = undefined && undefined.__assign || function () {
       });
     },
     getEventsForDay: function getEventsForDay(day) {
-      var identifier = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_3__["getDayIdentifier"])(day);
+      var identifier = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_4__["getDayIdentifier"])(day);
       return this.parsedEvents.filter(function (event) {
-        return Object(_util_events__WEBPACK_IMPORTED_MODULE_4__["isEventOn"])(event, identifier);
+        return Object(_util_events__WEBPACK_IMPORTED_MODULE_5__["isEventOn"])(event, identifier);
       });
     },
     getEventsForDayAll: function getEventsForDayAll(day) {
-      var identifier = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_3__["getDayIdentifier"])(day);
+      var identifier = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_4__["getDayIdentifier"])(day);
       return this.parsedEvents.filter(function (event) {
-        return event.allDay && Object(_util_events__WEBPACK_IMPORTED_MODULE_4__["isEventOn"])(event, identifier);
+        return event.allDay && Object(_util_events__WEBPACK_IMPORTED_MODULE_5__["isEventOn"])(event, identifier);
       });
     },
     getEventsForDayTimed: function getEventsForDayTimed(day) {
-      var identifier = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_3__["getDayIdentifier"])(day);
+      var identifier = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_4__["getDayIdentifier"])(day);
       return this.parsedEvents.filter(function (event) {
-        return !event.allDay && Object(_util_events__WEBPACK_IMPORTED_MODULE_4__["isEventOn"])(event, identifier);
+        return !event.allDay && Object(_util_events__WEBPACK_IMPORTED_MODULE_5__["isEventOn"])(event, identifier);
       });
     },
     isSameColumn: function isSameColumn(a, b) {
-      var astart = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_3__["parseTime"])(a.event.start);
-      var bstart = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_3__["parseTime"])(b.event.start);
+      var astart = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_4__["parseTime"])(a.event.start);
+      var bstart = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_4__["parseTime"])(b.event.start);
       var diff = astart - bstart;
       var abs = diff < 0 ? -diff : diff;
       return abs < this.eventOverlapThreshold;
     },
     isOverlapping: function isOverlapping(a, b) {
-      var astart = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_3__["parseTime"])(a.event.start);
-      var bstart = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_3__["parseTime"])(b.event.start);
+      var astart = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_4__["parseTime"])(a.event.start);
+      var bstart = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_4__["parseTime"])(b.event.start);
 
       if (a.offset < b.offset && bstart < astart) {
         var aend = astart + this.eventOverlapThreshold;
-        var bend = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_3__["parseTime"])(b.event.end);
+        var bend = Object(_util_timestamp__WEBPACK_IMPORTED_MODULE_4__["parseTime"])(b.event.end);
         return !(astart >= bend || aend <= bstart);
       }
 
@@ -39633,8 +37070,7 @@ __webpack_require__.r(__webpack_exports__);
     },
     end: {
       type: String,
-      validate: _timestamp__WEBPACK_IMPORTED_MODULE_0__["validateTimestamp"],
-      default: '0000-00-00'
+      validate: _timestamp__WEBPACK_IMPORTED_MODULE_0__["validateTimestamp"]
     },
     weekdays: {
       type: Array,
@@ -40515,6 +37951,7 @@ var __assign = undefined && undefined.__assign || function () {
   data: function data() {
     return {
       internalHeight: this.height,
+      noHeightReset: true,
       slideTimeout: undefined
     };
   },
@@ -40596,7 +38033,8 @@ var __assign = undefined && undefined.__assign || function () {
 
       return this.$createElement(_mixins_button_group__WEBPACK_IMPORTED_MODULE_5__["default"], {
         props: {
-          value: this.internalValue
+          value: this.internalValue,
+          mandatory: this.mandatory
         },
         on: {
           change: function change(val) {
@@ -40696,7 +38134,9 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_2__["default"])(_V
           height: this.windowGroup.internalHeight
         }),
         on: this.$listeners
-      }, this.$slots.default)];
+      }, [this.$slots.default, this.$createElement('template', {
+        slot: 'placeholder'
+      }, this.$slots.placeholder)])];
     },
     genWindowItem: function genWindowItem() {
       var _a = this.generateRouteLink(),
@@ -40851,7 +38291,12 @@ var __assign = undefined && undefined.__assign || function () {
   },
   watch: {
     indeterminate: function indeterminate(val) {
-      this.inputIndeterminate = val;
+      var _this = this; // https://github.com/vuetifyjs/vuetify/issues/8270
+
+
+      this.$nextTick(function () {
+        return _this.inputIndeterminate = val;
+      });
     },
     inputIndeterminate: function inputIndeterminate(val) {
       this.$emit('update:indeterminate', val);
@@ -41501,6 +38946,11 @@ var __assign = undefined && undefined.__assign || function () {
       })
     };
   },
+  computed: {
+    hideAlpha: function hideAlpha() {
+      return this.value && !Object(_util__WEBPACK_IMPORTED_MODULE_6__["hasAlpha"])(this.value);
+    }
+  },
   watch: {
     value: {
       handler: function handler(color) {
@@ -41545,6 +38995,7 @@ var __assign = undefined && undefined.__assign || function () {
         props: {
           color: this.internalValue,
           disabled: this.disabled,
+          hideAlpha: this.hideAlpha,
           hideModeSwitch: this.hideModeSwitch,
           mode: this.mode
         },
@@ -41560,7 +39011,8 @@ var __assign = undefined && undefined.__assign || function () {
       return this.$createElement(_VColorPickerPreview__WEBPACK_IMPORTED_MODULE_2__["default"], {
         props: {
           color: this.internalValue,
-          disabled: this.disabled
+          disabled: this.disabled,
+          hideAlpha: this.hideAlpha
         },
         on: {
           'update:color': this.updateColor
@@ -41867,6 +39319,7 @@ var modes = {
   props: {
     color: Object,
     disabled: Boolean,
+    hideAlpha: Boolean,
     hideModeSwitch: Boolean,
     mode: {
       type: String,
@@ -41928,9 +39381,9 @@ var modes = {
         case 'hexa':
           {
             var hex = this.color.hexa;
-            var value = hex.endsWith('FF') ? hex.substr(0, 7) : hex;
+            var value = this.hideAlpha && hex.endsWith('FF') ? hex.substr(0, 7) : hex;
             return this.genInput('hex', {
-              maxlength: 9,
+              maxlength: this.hideAlpha ? 7 : 9,
               disabled: this.disabled
             }, value, {
               change: function change(e) {
@@ -41943,7 +39396,8 @@ var modes = {
 
         default:
           {
-            return this.currentMode.inputs.map(function (_a) {
+            var inputs = this.hideAlpha ? this.currentMode.inputs.slice(0, -1) : this.currentMode.inputs;
+            return inputs.map(function (_a) {
               var _b = __read(_a, 3),
                   target = _b[0],
                   max = _b[1],
@@ -42049,7 +39503,8 @@ var __assign = undefined && undefined.__assign || function () {
   name: 'v-color-picker-preview',
   props: {
     color: Object,
-    disabled: Boolean
+    disabled: Boolean,
+    hideAlpha: Boolean
   },
   methods: {
     genAlpha: function genAlpha() {
@@ -42080,7 +39535,7 @@ var __assign = undefined && undefined.__assign || function () {
     genSliders: function genSliders() {
       return this.$createElement('div', {
         staticClass: 'v-color-picker__sliders'
-      }, [this.genHue(), this.genAlpha()]);
+      }, [this.genHue(), !this.hideAlpha && this.genAlpha()]);
     },
     genDot: function genDot() {
       return this.$createElement('div', {
@@ -42125,7 +39580,10 @@ var __assign = undefined && undefined.__assign || function () {
   },
   render: function render(h) {
     return h('div', {
-      staticClass: 'v-color-picker__preview'
+      staticClass: 'v-color-picker__preview',
+      class: {
+        'v-color-picker__preview--hide-alpha': this.hideAlpha
+      }
     }, [this.genDot(), this.genSliders()]);
   }
 }));
@@ -42274,7 +39732,7 @@ __webpack_require__.r(__webpack_exports__);
 /*!***************************************************!*\
   !*** ./src/components/VColorPicker/util/index.ts ***!
   \***************************************************/
-/*! exports provided: fromHSVA, fromHSLA, fromRGBA, fromHexa, fromHex, parseColor, extractColor */
+/*! exports provided: fromHSVA, fromHSLA, fromRGBA, fromHexa, fromHex, parseColor, extractColor, hasAlpha */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -42286,6 +39744,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fromHex", function() { return fromHex; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseColor", function() { return parseColor; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "extractColor", function() { return extractColor; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hasAlpha", function() { return hasAlpha; });
 /* harmony import */ var _util_colorUtils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../util/colorUtils */ "./src/util/colorUtils.ts");
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -42310,19 +39769,8 @@ var __assign = undefined && undefined.__assign || function () {
 function fromHSVA(hsva) {
   hsva = __assign({}, hsva);
   var hexa = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoHex"])(hsva);
-  return {
-    alpha: hsva.a,
-    hex: hexa.substr(0, 7),
-    hexa: hexa,
-    hsla: Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoHSLA"])(hsva),
-    hsva: hsva,
-    hue: hsva.h,
-    rgba: Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoRGBA"])(hsva)
-  };
-}
-function fromHSLA(hsla) {
-  var hsva = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSLAtoHSVA"])(hsla);
-  var hexa = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoHex"])(hsva);
+  var hsla = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoHSLA"])(hsva);
+  var rgba = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoRGBA"])(hsva);
   return {
     alpha: hsva.a,
     hex: hexa.substr(0, 7),
@@ -42330,17 +39778,32 @@ function fromHSLA(hsla) {
     hsla: hsla,
     hsva: hsva,
     hue: hsva.h,
-    rgba: Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoRGBA"])(hsva)
+    rgba: rgba
+  };
+}
+function fromHSLA(hsla) {
+  var hsva = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSLAtoHSVA"])(hsla);
+  var hexa = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoHex"])(hsva);
+  var rgba = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoRGBA"])(hsva);
+  return {
+    alpha: hsva.a,
+    hex: hexa.substr(0, 7),
+    hexa: hexa,
+    hsla: hsla,
+    hsva: hsva,
+    hue: hsva.h,
+    rgba: rgba
   };
 }
 function fromRGBA(rgba) {
   var hsva = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["RGBAtoHSVA"])(rgba);
   var hexa = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["RGBAtoHex"])(rgba);
+  var hsla = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoHSLA"])(hsva);
   return {
     alpha: hsva.a,
     hex: hexa.substr(0, 7),
     hexa: hexa,
-    hsla: Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoHSLA"])(hsva),
+    hsla: hsla,
     hsva: hsva,
     hue: hsva.h,
     rgba: rgba
@@ -42348,14 +39811,16 @@ function fromRGBA(rgba) {
 }
 function fromHexa(hexa) {
   var hsva = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HexToHSVA"])(hexa);
+  var hsla = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoHSLA"])(hsva);
+  var rgba = Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoRGBA"])(hsva);
   return {
     alpha: hsva.a,
     hex: hexa.substr(0, 7),
     hexa: hexa,
-    hsla: Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoHSLA"])(hsva),
+    hsla: hsla,
     hsva: hsva,
     hue: hsva.h,
-    rgba: Object(_util_colorUtils__WEBPACK_IMPORTED_MODULE_0__["HSVAtoRGBA"])(hsva)
+    rgba: rgba
   };
 }
 function fromHex(hex) {
@@ -42418,6 +39883,19 @@ function extractColor(color, input) {
   }
 
   return color;
+}
+function hasAlpha(color) {
+  if (!color) return false;
+
+  if (typeof color === 'string') {
+    return color.length > 7;
+  }
+
+  if (_typeof(color) === 'object') {
+    return has(color, ['a']);
+  }
+
+  return false;
 }
 
 /***/ }),
@@ -42582,7 +40060,7 @@ var __assign = undefined && undefined.__assign || function () {
       if (this.editingIndex > -1) {
         this.updateEditing();
       } else {
-        _VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.selectItem.call(this, item);
+        _VAutocomplete_VAutocomplete__WEBPACK_IMPORTED_MODULE_2__["default"].options.methods.selectItem.call(this, item);
       }
     },
     setSelectedItems: function setSelectedItems() {
@@ -42593,7 +40071,7 @@ var __assign = undefined && undefined.__assign || function () {
       }
     },
     setValue: function setValue(value) {
-      _VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.setValue.call(this, value || this.internalSearch);
+      _VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.setValue.call(this, value != null ? value : this.internalSearch);
     },
     updateEditing: function updateEditing() {
       var value = this.internalValue.slice();
@@ -42949,17 +40427,23 @@ var __assign = undefined && undefined.__assign || function () {
     }
   },
   data: function data() {
+    var internalOptions = {
+      page: this.page,
+      itemsPerPage: this.itemsPerPage,
+      sortBy: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_0__["wrapInArray"])(this.sortBy),
+      sortDesc: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_0__["wrapInArray"])(this.sortDesc),
+      groupBy: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_0__["wrapInArray"])(this.groupBy),
+      groupDesc: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_0__["wrapInArray"])(this.groupDesc),
+      mustSort: this.mustSort,
+      multiSort: this.multiSort
+    };
+
+    if (this.options) {
+      internalOptions = Object.assign(internalOptions, this.options);
+    }
+
     return {
-      internalOptions: {
-        page: this.page,
-        itemsPerPage: this.itemsPerPage,
-        sortBy: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_0__["wrapInArray"])(this.sortBy),
-        sortDesc: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_0__["wrapInArray"])(this.sortDesc),
-        groupBy: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_0__["wrapInArray"])(this.groupBy),
-        groupDesc: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_0__["wrapInArray"])(this.groupDesc),
-        mustSort: this.mustSort,
-        multiSort: this.multiSort
-      }
+      internalOptions: internalOptions
     };
   },
   computed: {
@@ -43028,10 +40512,13 @@ var __assign = undefined && undefined.__assign || function () {
         groupedItems: this.groupedItems
       };
       return props;
+    },
+    computedOptions: function computedOptions() {
+      return __assign({}, this.options);
     }
   },
   watch: {
-    options: {
+    computedOptions: {
       handler: function handler(options, old) {
         if (Object(_util_helpers__WEBPACK_IMPORTED_MODULE_0__["deepEqual"])(options, old)) return;
         this.updateOptions(options);
@@ -43061,8 +40548,11 @@ var __assign = undefined && undefined.__assign || function () {
         itemsPerPage: _itemsPerPage
       });
     },
-    'internalOptions.itemsPerPage': function internalOptionsItemsPerPage(itemsPerPage) {
-      this.$emit('update:items-per-page', itemsPerPage);
+    'internalOptions.itemsPerPage': {
+      handler: function handler(itemsPerPage) {
+        this.$emit('update:items-per-page', itemsPerPage);
+      },
+      immediate: true
     },
     sortBy: function sortBy(_sortBy) {
       this.updateOptions({
@@ -43204,7 +40694,7 @@ var __assign = undefined && undefined.__assign || function () {
     },
     updateOptions: function updateOptions(options) {
       this.internalOptions = __assign({}, this.internalOptions, options, {
-        page: Math.max(1, Math.min(options.page || this.internalOptions.page, this.pageCount))
+        page: this.serverItemsLength < 0 ? Math.max(1, Math.min(options.page || this.internalOptions.page, this.pageCount)) : options.page || this.internalOptions.page
       });
     },
     sortItems: function sortItems(items) {
@@ -43440,7 +40930,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
       if (this.showFirstLastPage) {
         before.unshift(this.genIcon(this.onFirstPage, this.options.page === 1, this.$vuetify.lang.t('$vuetify.dataFooter.firstPage'), this.$vuetify.rtl ? this.lastIcon : this.firstIcon));
-        after.push(this.genIcon(this.onLastPage, this.options.page === this.pagination.pageCount || this.options.itemsPerPage === -1, this.$vuetify.lang.t('$vuetify.dataFooter.lastPage'), this.$vuetify.rtl ? this.firstIcon : this.lastIcon));
+        after.push(this.genIcon(this.onLastPage, this.options.page >= this.pagination.pageCount || this.options.itemsPerPage === -1, this.$vuetify.lang.t('$vuetify.dataFooter.lastPage'), this.$vuetify.rtl ? this.firstIcon : this.lastIcon));
       }
 
       return [this.$createElement('div', {
@@ -43584,6 +41074,9 @@ var __read = undefined && undefined.__read || function (o, n) {
       return this.internalCurrentItems.some(function (i) {
         return _this.isSelected(i);
       });
+    },
+    sanitizedFooterProps: function sanitizedFooterProps() {
+      return Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["camelizeObjectKeys"])(this.footerProps);
     }
   },
   watch: {
@@ -43754,7 +41247,7 @@ var __read = undefined && undefined.__read || function (o, n) {
     genFooter: function genFooter(props) {
       if (this.hideDefaultFooter) return null;
       var data = {
-        props: __assign({}, this.footerProps, {
+        props: __assign({}, this.sanitizedFooterProps, {
           options: props.options,
           pagination: props.pagination
         }),
@@ -44107,6 +41600,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _directives_ripple__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../directives/ripple */ "./src/directives/ripple/index.ts");
 /* harmony import */ var _util_helpers__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../../util/helpers */ "./src/util/helpers.ts");
 /* harmony import */ var _util_console__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../util/console */ "./src/util/console.ts");
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 var __assign = undefined && undefined.__assign || function () {
   __assign = Object.assign || function (t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
@@ -44276,10 +41771,15 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
 
       return headers;
     },
-    computedHeadersLength: function computedHeadersLength() {
-      return this.headersLength || this.computedHeaders.length;
+    colspanAttrs: function colspanAttrs() {
+      return this.isMobile ? undefined : {
+        colspan: this.headersLength || this.computedHeaders.length
+      };
     },
     isMobile: function isMobile() {
+      // Guard against SSR render
+      // https://github.com/vuetifyjs/vuetify/issues/7410
+      if (this.$vuetify.breakpoint.width === 0) return false;
       return this.$vuetify.breakpoint.width < this.mobileBreakpoint;
     },
     columnSorters: function columnSorters() {
@@ -44297,6 +41797,19 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
       return this.computedHeaders.filter(function (header) {
         return !header.filter;
       });
+    },
+    sanitizedHeaderProps: function sanitizedHeaderProps() {
+      return Object(_util_helpers__WEBPACK_IMPORTED_MODULE_13__["camelizeObjectKeys"])(this.headerProps);
+    },
+    computedItemsPerPage: function computedItemsPerPage() {
+      var itemsPerPage = this.options && this.options.itemsPerPage ? this.options.itemsPerPage : this.itemsPerPage;
+
+      if (this.sanitizedFooterProps.itemsPerPageOptions && !this.sanitizedFooterProps.itemsPerPageOptions.includes(itemsPerPage)) {
+        var firstOption = this.sanitizedFooterProps.itemsPerPageOptions[0];
+        return _typeof(firstOption) === 'object' ? firstOption.value : firstOption;
+      }
+
+      return itemsPerPage;
     }
   },
   created: function created() {
@@ -44357,9 +41870,6 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
         return _this.$createElement('col', {
           class: {
             divider: header.divider
-          },
-          style: {
-            width: header.width
           }
         });
       }));
@@ -44374,9 +41884,7 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
       });
       var th = this.$createElement('th', {
         staticClass: 'column',
-        attrs: {
-          colspan: this.computedHeadersLength
-        }
+        attrs: this.colspanAttrs
       }, [progress]);
       var tr = this.$createElement('tr', {
         staticClass: 'v-data-table__progress'
@@ -44385,7 +41893,7 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
     },
     genHeaders: function genHeaders(props) {
       var data = {
-        props: __assign({}, this.headerProps, {
+        props: __assign({}, this.sanitizedHeaderProps, {
           headers: this.computedHeaders,
           options: props.options,
           mobile: this.isMobile,
@@ -44417,9 +41925,7 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
       return this.$createElement('tr', {
         staticClass: 'v-data-table__empty-wrapper'
       }, [this.$createElement('td', {
-        attrs: {
-          colspan: this.computedHeadersLength
-        }
+        attrs: this.colspanAttrs
       }, content)]);
     },
     genItems: function genItems(items, props) {
@@ -44475,7 +41981,7 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
               return _this.$set(_this.openCache, group, !_this.openCache[group]);
             }
           }
-        }, [this.$createElement(_VIcon__WEBPACK_IMPORTED_MODULE_5__["default"], [isOpen ? 'remove' : 'add'])]);
+        }, [this.$createElement(_VIcon__WEBPACK_IMPORTED_MODULE_5__["default"], [isOpen ? '$vuetify.icons.minus' : '$vuetify.icons.plus'])]);
         var remove = this.$createElement(_VBtn__WEBPACK_IMPORTED_MODULE_3__["default"], {
           staticClass: 'ma-0',
           props: {
@@ -44490,12 +41996,10 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
               });
             }
           }
-        }, [this.$createElement(_VIcon__WEBPACK_IMPORTED_MODULE_5__["default"], ['close'])]);
+        }, [this.$createElement(_VIcon__WEBPACK_IMPORTED_MODULE_5__["default"], ['$vuetify.icons.close'])]);
         var column = this.$createElement('td', {
           staticClass: 'text-start',
-          attrs: {
-            colspan: this.computedHeadersLength
-          }
+          attrs: this.colspanAttrs
         }, [toggle, props.options.groupBy[0] + ": " + group, remove]);
         children.unshift(this.$createElement('template', {
           slot: 'column.header'
@@ -44528,7 +42032,9 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
 
       for (var i = 0; i < items.length; i++) {
         var item = items[i];
-        rows.push(this.$scopedSlots.item(this.createItemProps(item)));
+        rows.push(this.$scopedSlots.item(__assign({}, this.createItemProps(item), {
+          index: i
+        })));
 
         if (this.isExpanded(item)) {
           rows.push(this.$scopedSlots['expanded-item']({
@@ -44651,7 +42157,7 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
           options: props.options,
           pagination: props.pagination,
           itemsPerPageText: '$vuetify.dataTable.itemsPerPageText'
-        }, this.footerProps),
+        }, this.sanitizedFooterProps),
         on: {
           'update:options': function updateOptions(value) {
             return props.updateOptions(value);
@@ -44663,7 +42169,9 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
       var children = [Object(_util_helpers__WEBPACK_IMPORTED_MODULE_13__["getSlot"])(this, 'footer', data, true)];
 
       if (!this.hideDefaultFooter) {
-        children.push(this.$createElement(_VDataIterator__WEBPACK_IMPORTED_MODULE_2__["VDataFooter"], data));
+        children.push(this.$createElement(_VDataIterator__WEBPACK_IMPORTED_MODULE_2__["VDataFooter"], __assign({}, data, {
+          scopedSlots: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_13__["getPrefixedScopedSlots"])('footer.', this.$scopedSlots)
+        })));
       }
 
       return children;
@@ -44707,7 +42215,8 @@ function searchTableItems(items, search, headersWithCustomFilters, headersWithou
     return this.$createElement(_VData__WEBPACK_IMPORTED_MODULE_1__["VData"], {
       props: __assign({}, this.$props, {
         customFilter: this.customFilterWithColumns,
-        customSort: this.customSortWithHeaders
+        customSort: this.customSortWithHeaders,
+        itemsPerPage: this.computedItemsPerPage
       }),
       on: {
         'update:options': function updateOptions(v, old) {
@@ -44884,8 +42393,11 @@ var __spread = undefined && undefined.__spread || function () {
         role: 'columnheader',
         scope: 'col',
         'aria-label': header.text || '',
-        'aria-sort': 'none',
-        width: header.width
+        'aria-sort': 'none'
+      };
+      var styles = {
+        width: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_2__["convertToUnit"])(header.width),
+        minWidth: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_2__["convertToUnit"])(header.width)
       };
 
       var classes = __spread(["text-" + (header.align || 'start')], Object(_util_helpers__WEBPACK_IMPORTED_MODULE_2__["wrapInArray"])(header.class));
@@ -44935,6 +42447,7 @@ var __spread = undefined && undefined.__spread || function () {
       return this.$createElement('th', {
         attrs: attrs,
         class: classes,
+        style: styles,
         on: listeners
       }, children);
     }
@@ -45008,6 +42521,12 @@ var __spread = undefined && undefined.__spread || function () {
 
 /* harmony default export */ __webpack_exports__["default"] = (Object(_util_mixins__WEBPACK_IMPORTED_MODULE_0__["default"])(_mixins_header__WEBPACK_IMPORTED_MODULE_3__["default"]).extend({
   name: 'v-data-table-header-mobile',
+  props: {
+    sortByText: {
+      type: String,
+      default: '$vuetify.dataTable.sortBy'
+    }
+  },
   methods: {
     genSortChip: function genSortChip(props) {
       var _this = this;
@@ -45046,7 +42565,7 @@ var __spread = undefined && undefined.__spread || function () {
       });
       return this.$createElement(_VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1__["default"], {
         props: {
-          label: 'Sort by',
+          label: this.$vuetify.lang.t(this.sortByText),
           items: sortHeaders,
           hideDetails: true,
           multiple: this.options.multiSort,
@@ -45082,11 +42601,7 @@ var __spread = undefined && undefined.__spread || function () {
     }
 
     children.push(this.genSortSelect());
-    var th = h('th', {
-      attrs: {
-        colspan: this.headers.length
-      }
-    }, [h('div', {
+    var th = h('th', [h('div', {
       staticClass: 'v-data-table-header-mobile__wrapper'
     }, children)]);
     var tr = h('tr', [th]);
@@ -45251,10 +42766,12 @@ __webpack_require__.r(__webpack_exports__);
       scopedSlots: {
         activator: function activator(_a) {
           var on = _a.on;
-          return h('span', {
+          return h('div', {
             staticClass: 'v-small-dialog__activator',
             on: on
-          }, _this.$slots.default);
+          }, [h('span', {
+            staticClass: 'v-small-dialog__activator__content'
+          }, _this.$slots.default)]);
         }
       }
     }, [this.genContent(), this.large ? this.genActions() : null]);
@@ -45647,6 +43164,7 @@ var __assign = undefined && undefined.__assign || function () {
     },
     genSortIcon: function genSortIcon() {
       return this.$createElement(_VIcon__WEBPACK_IMPORTED_MODULE_0__["default"], {
+        staticClass: 'v-data-table-header__icon',
         props: {
           size: 18
         }
@@ -45893,7 +43411,7 @@ function sanitizeDateString(dateString, type) {
           return _this.defaultTitleDateFormatter(dates[0]);
         }
 
-        return _this.$vuetify.lang.t(_this.selectedItemsText, [dates.length]);
+        return _this.$vuetify.lang.t(_this.selectedItemsText, dates.length);
       };
     },
     defaultTitleDateFormatter: function defaultTitleDateFormatter() {
@@ -46812,6 +44330,10 @@ __webpack_require__.r(__webpack_exports__);
 
       if (activeItem) {
         _this.$el.scrollTop = activeItem.offsetTop - _this.$el.offsetHeight / 2 + activeItem.offsetHeight / 2;
+      } else if (_this.min && !_this.max) {
+        _this.$el.scrollTop = _this.$el.scrollHeight;
+      } else if (!_this.min && _this.max) {
+        _this.$el.scrollTop = 0;
       } else {
         _this.$el.scrollTop = _this.$el.scrollHeight / 2 - _this.$el.offsetHeight / 2;
       }
@@ -47384,6 +44906,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _util_helpers__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../util/helpers */ "./src/util/helpers.ts");
 /* harmony import */ var _util_ThemeProvider__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../util/ThemeProvider */ "./src/util/ThemeProvider.ts");
 /* harmony import */ var _util_mixins__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../util/mixins */ "./src/util/mixins.ts");
+/* harmony import */ var _util_console__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../util/console */ "./src/util/console.ts");
 var __assign = undefined && undefined.__assign || function () {
   __assign = Object.assign || function (t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
@@ -47415,6 +44938,7 @@ var __assign = undefined && undefined.__assign || function () {
 
 
 
+
 var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_mixins_activatable__WEBPACK_IMPORTED_MODULE_1__["default"], _mixins_dependent__WEBPACK_IMPORTED_MODULE_2__["default"], _mixins_detachable__WEBPACK_IMPORTED_MODULE_3__["default"], _mixins_overlayable__WEBPACK_IMPORTED_MODULE_4__["default"], _mixins_returnable__WEBPACK_IMPORTED_MODULE_5__["default"], _mixins_stackable__WEBPACK_IMPORTED_MODULE_6__["default"], _mixins_toggleable__WEBPACK_IMPORTED_MODULE_7__["default"]);
 /* @vue/component */
 
@@ -47427,7 +44951,6 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_
     dark: Boolean,
     disabled: Boolean,
     fullscreen: Boolean,
-    fullWidth: Boolean,
     light: Boolean,
     maxWidth: {
       type: [String, Number],
@@ -47500,6 +45023,12 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_
       }
     }
   },
+  created: function created() {
+    /* istanbul ignore next */
+    if (this.$attrs.hasOwnProperty('full-width')) {
+      Object(_util_console__WEBPACK_IMPORTED_MODULE_12__["removed"])('full-width', this);
+    }
+  },
   beforeMount: function beforeMount() {
     var _this = this;
 
@@ -47529,16 +45058,17 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_
     closeConditional: function closeConditional(e) {
       var target = e.target; // If the dialog content contains
       // the click event, or if the
-      // dialog is not active
+      // dialog is not active, or if the overlay
+      // is the same element as the target
 
-      if (!this.isActive || this.$refs.content.contains(target)) return false; // If we made it here, the click is outside
+      if (this._isDestroyed || !this.isActive || this.$refs.content.contains(target) || this.overlay && target && !this.overlay.$el.contains(target)) return false; // If we made it here, the click is outside
       // and is active. If persistent, and the
       // click is on the overlay, animate
 
       this.$emit('click:outside');
 
-      if (this.persistent) {
-        if (!this.noClickAnimation && this.overlay === target) this.animateClick();
+      if (this.persistent && this.overlay) {
+        if (!this.noClickAnimation && (this.overlay.$el === target || this.overlay.$el.contains(target))) this.animateClick();
         return false;
       } // close dialog if !persistent, clicked outside and we're the topmost dialog.
       // Since this should only be called in a capture event (bottom up), we shouldn't need to stop propagation
@@ -47554,9 +45084,14 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_
       }
     },
     show: function show() {
+      var _this = this;
+
       !this.fullscreen && !this.hideOverlay && this.genOverlay();
-      this.$refs.content.focus();
-      this.bind();
+      this.$nextTick(function () {
+        _this.$refs.content.focus();
+
+        _this.bind();
+      });
     },
     bind: function bind() {
       window.addEventListener('focusin', this.onFocusin);
@@ -47580,7 +45115,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_
       this.$emit('keydown', e);
     },
     onFocusin: function onFocusin(e) {
-      if (!e || !this.retainFocus) return;
+      if (!e || e.target === document.activeElement || !this.retainFocus) return;
       var target = e.target;
 
       if (!!target && // It isn't the document or the dialog body
@@ -47648,7 +45183,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_
       class: this.contentClasses,
       attrs: __assign({
         role: 'document',
-        tabindex: 0
+        tabindex: this.isActive ? 0 : undefined
       }, this.getScopeIdAttrs()),
       on: {
         keydown: this.onKeydown
@@ -47668,9 +45203,6 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_
       staticClass: 'v-dialog__container',
       attrs: {
         role: 'dialog'
-      },
-      style: {
-        display: !this.hasActivator || this.fullWidth ? 'block' : 'inline-block'
       }
     }, children);
   }
@@ -48244,6 +45776,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _VTextField__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../VTextField */ "./src/components/VTextField/index.ts");
 /* harmony import */ var _VChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../VChip */ "./src/components/VChip/index.ts");
 /* harmony import */ var _util_helpers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../util/helpers */ "./src/util/helpers.ts");
+/* harmony import */ var _util_console__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../util/console */ "./src/util/console.ts");
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 var __assign = undefined && undefined.__assign || function () {
@@ -48305,6 +45838,7 @@ var __spread = undefined && undefined.__spread || function () {
  // Utilities
 
 
+
 /* harmony default export */ __webpack_exports__["default"] = (_VTextField__WEBPACK_IMPORTED_MODULE_1__["default"].extend({
   name: 'v-file-input',
   model: {
@@ -48332,7 +45866,7 @@ var __spread = undefined && undefined.__spread || function () {
     },
     readonly: {
       type: Boolean,
-      default: true
+      default: false
     },
     showSize: {
       type: [Boolean, Number],
@@ -48359,11 +45893,6 @@ var __spread = undefined && undefined.__spread || function () {
       }
     }
   },
-  data: function data() {
-    return {
-      internalFileInput: null
-    };
-  },
   computed: {
     classes: function classes() {
       return __assign({}, _VTextField__WEBPACK_IMPORTED_MODULE_1__["default"].options.computed.classes.call(this), {
@@ -48371,11 +45900,12 @@ var __spread = undefined && undefined.__spread || function () {
       });
     },
     counterValue: function counterValue() {
-      if (!this.showSize) return this.$vuetify.lang.t(this.counterString, this.lazyValue.length);
+      var fileCount = this.isMultiple && this.lazyValue ? this.lazyValue.length : this.lazyValue instanceof File ? 1 : 0;
+      if (!this.showSize) return this.$vuetify.lang.t(this.counterString, fileCount);
       var bytes = this.internalArrayValue.reduce(function (size, file) {
         return size + file.size;
       }, 0);
-      return this.$vuetify.lang.t(this.counterSizeString, this.lazyValue.length, Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["humanReadableFileSize"])(bytes, this.base === 1024));
+      return this.$vuetify.lang.t(this.counterSizeString, fileCount, Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["humanReadableFileSize"])(bytes, this.base === 1024));
     },
     internalArrayValue: function internalArrayValue() {
       return Array.isArray(this.internalValue) ? this.internalValue : Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["wrapInArray"])(this.internalValue);
@@ -48415,10 +45945,18 @@ var __spread = undefined && undefined.__spread || function () {
       return this.chips || this.smallChips;
     }
   },
+  watch: {
+    readonly: {
+      handler: function handler(v) {
+        if (v === true) Object(_util_console__WEBPACK_IMPORTED_MODULE_4__["consoleError"])('readonly is not supported on <v-file-input>', this);
+      },
+      immediate: true
+    }
+  },
   methods: {
     clearableCallback: function clearableCallback() {
       this.internalValue = this.isMultiple ? [] : null;
-      this.internalFileInput = null;
+      this.$refs.input.value = '';
     },
     genChips: function genChips() {
       var _this = this;
@@ -48440,8 +45978,17 @@ var __spread = undefined && undefined.__spread || function () {
       });
     },
     genInput: function genInput() {
-      var input = _VTextField__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.genInput.call(this);
-      input.data.domProps.value = this.internalFileInput;
+      var input = _VTextField__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.genInput.call(this); // We should not be setting value
+      // programmatically on the input
+      // when it is using type="file"
+
+      delete input.data.domProps.value; // This solves an issue in Safari where
+      // nothing happens when adding a file
+      // do to the input event not firing
+      // https://github.com/vuetifyjs/vuetify/issues/7941
+
+      delete input.data.on.input;
+      input.data.on.change = this.onInput;
       return [this.genSelections(), input];
     },
     genPrependSlot: function genPrependSlot() {
@@ -48465,7 +46012,7 @@ var __spread = undefined && undefined.__spread || function () {
       var children = [];
 
       if (this.isDirty && this.$scopedSlots.selection) {
-        this.internalValue.forEach(function (file, index) {
+        this.internalArrayValue.forEach(function (file, index) {
           if (!_this.$scopedSlots.selection) return;
           children.push(_this.$scopedSlots.selection({
             text: _this.text[index],
@@ -48493,7 +46040,14 @@ var __spread = undefined && undefined.__spread || function () {
     onInput: function onInput(e) {
       var files = __spread(e.target.files || []);
 
-      this.internalValue = this.isMultiple ? files : files[0];
+      this.internalValue = this.isMultiple ? files : files[0]; // Set initialValue here otherwise isFocused
+      // watcher in VTextField will emit a change
+      // event whenever the component is blurred
+
+      this.initialValue = this.internalValue;
+    },
+    onKeyDown: function onKeyDown(e) {
+      this.$emit('keydown', e);
     },
     truncateText: function truncateText(str) {
       if (str.length < Number(this.truncateLength)) return str;
@@ -51755,6 +49309,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _util_mixins__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../util/mixins */ "./src/util/mixins.ts");
 /* harmony import */ var _util_helpers__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../util/helpers */ "./src/util/helpers.ts");
 /* harmony import */ var _util_ThemeProvider__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../util/ThemeProvider */ "./src/util/ThemeProvider.ts");
+/* harmony import */ var _util_console__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../../util/console */ "./src/util/console.ts");
 var __assign = undefined && undefined.__assign || function () {
   __assign = Object.assign || function (t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
@@ -51823,6 +49378,7 @@ var __spread = undefined && undefined.__spread || function () {
 
 
 
+
 var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_10__["default"])(_mixins_dependent__WEBPACK_IMPORTED_MODULE_2__["default"], _mixins_delayable__WEBPACK_IMPORTED_MODULE_1__["default"], _mixins_detachable__WEBPACK_IMPORTED_MODULE_3__["default"], _mixins_menuable__WEBPACK_IMPORTED_MODULE_4__["default"], _mixins_returnable__WEBPACK_IMPORTED_MODULE_5__["default"], _mixins_toggleable__WEBPACK_IMPORTED_MODULE_6__["default"], _mixins_themeable__WEBPACK_IMPORTED_MODULE_7__["default"]);
 /* @vue/component */
 
@@ -51851,7 +49407,6 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_10__["default"])(_
     },
     disabled: Boolean,
     disableKeys: Boolean,
-    fullWidth: Boolean,
     maxHeight: {
       type: [Number, String],
       default: 'auto'
@@ -51946,6 +49501,12 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_10__["default"])(_
       prev in this.tiles && this.tiles[prev].classList.remove('v-list-item--highlighted');
     }
   },
+  created: function created() {
+    /* istanbul ignore next */
+    if (this.$attrs.hasOwnProperty('full-width')) {
+      Object(_util_console__WEBPACK_IMPORTED_MODULE_13__["removed"])('full-width', this);
+    }
+  },
   mounted: function mounted() {
     this.isActive && this.callActivate();
   },
@@ -52017,7 +49578,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_10__["default"])(_
     },
     closeConditional: function closeConditional(e) {
       var target = e.target;
-      return this.isActive && this.closeOnClick && !this.$refs.content.contains(target);
+      return this.isActive && !this._isDestroyed && this.closeOnClick && !this.$refs.content.contains(target);
     },
     genActivatorListeners: function genActivatorListeners() {
       var listeners = _mixins_menuable__WEBPACK_IMPORTED_MODULE_4__["default"].options.methods.genActivatorListeners.call(this);
@@ -52193,16 +49754,13 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_10__["default"])(_
   render: function render(h) {
     var data = {
       staticClass: 'v-menu',
-      class: {
-        'v-menu--inline': !this.fullWidth && (this.$slots.activator || this.$scopedSlots.activator)
-      },
       directives: [{
         arg: '500',
         name: 'resize',
         value: this.onResize
       }]
     };
-    return h('div', data, [this.genActivator(), this.$createElement(_util_ThemeProvider__WEBPACK_IMPORTED_MODULE_12__["default"], {
+    return h('div', data, [!this.activator && this.genActivator(), this.$createElement(_util_ThemeProvider__WEBPACK_IMPORTED_MODULE_12__["default"], {
       props: {
         root: true,
         light: this.light,
@@ -52457,7 +50015,8 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_12__["default"])(O
       touchArea: {
         left: 0,
         right: 0
-      }
+      },
+      stackMinZIndex: 6
     };
   },
   computed: {
@@ -52590,7 +50149,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_12__["default"])(O
       };
     },
     closeConditional: function closeConditional() {
-      return this.isActive && this.reactsToClick;
+      return this.isActive && !this._isDestroyed && this.reactsToClick;
     },
     genAppend: function genAppend() {
       return this.genPosition('append');
@@ -53181,7 +50740,7 @@ var __spread = undefined && undefined.__spread || function () {
       var totalVisible = parseInt(this.totalVisible, 10);
       var maxLength = totalVisible > this.maxButtons ? this.maxButtons : totalVisible || this.maxButtons;
 
-      if (this.length <= maxLength) {
+      if (this.length <= maxLength || maxLength < 1) {
         return this.range(1, this.length);
       }
 
@@ -53924,7 +51483,8 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_7__["default"])(_m
       var backgroundOpacity = this.backgroundOpacity == null ? this.backgroundColor ? 1 : 0.3 : parseFloat(this.backgroundOpacity);
       return {
         opacity: backgroundOpacity,
-        width: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_6__["convertToUnit"])(this.normalizedBuffer, '%')
+        left: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_6__["convertToUnit"])(this.normalizedValue, '%'),
+        width: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_6__["convertToUnit"])(this.normalizedBuffer - this.normalizedValue, '%')
       };
     },
     classes: function classes() {
@@ -54614,42 +52174,52 @@ var __spread = undefined && undefined.__spread || function () {
         var onFocus = function onFocus(e) {
           _this.isFocused = true;
           _this.activeThumb = index;
+
+          _this.$emit('focus', e);
+        };
+
+        var onBlur = function onBlur(e) {
+          _this.isFocused = false;
+          _this.activeThumb = null;
+
+          _this.$emit('blur', e);
         };
 
         var valueWidth = _this.inputWidth[index];
         var isActive = _this.isActive && _this.activeThumb === index;
         var isFocused = _this.isFocused && _this.activeThumb === index;
-        return _this.genThumbContainer(value, valueWidth, isActive, isFocused, onDrag, onFocus, "thumb_" + index);
+        return _this.genThumbContainer(value, valueWidth, isActive, isFocused, onDrag, onFocus, onBlur, "thumb_" + index);
       })];
-    },
-    onFocus: function onFocus(index) {
-      this.isFocused = true;
-      this.activeThumb = index;
-    },
-    onBlur: function onBlur() {
-      this.isFocused = false;
-      this.activeThumb = null;
     },
     onSliderClick: function onSliderClick(e) {
       if (!this.isActive) {
-        // It doesn't seem to matter if we focus on the wrong thumb here
-        var thumb = this.$refs.thumb_1;
-        thumb.focus();
-        this.onMouseMove(e, true);
+        if (this.noClick) {
+          this.noClick = false;
+          return;
+        }
+
+        var _a = this.parseMouseMove(e),
+            value = _a.value,
+            isInsideTrack = _a.isInsideTrack;
+
+        if (isInsideTrack) {
+          this.activeThumb = this.getIndexOfClosestValue(this.internalValue, value);
+          var refName = "thumb_" + this.activeThumb;
+          var thumbRef = this.$refs[refName];
+          thumbRef.focus();
+        }
+
+        this.setInternalValue(value);
         this.$emit('change', this.internalValue);
       }
     },
-    onMouseMove: function onMouseMove(e, trackClick) {
-      if (trackClick === void 0) {
-        trackClick = false;
-      }
-
+    onMouseMove: function onMouseMove(e) {
       var _a = this.parseMouseMove(e),
           value = _a.value,
           isInsideTrack = _a.isInsideTrack;
 
       if (isInsideTrack) {
-        if (trackClick) this.activeThumb = this.getIndexOfClosestValue(this.internalValue, value);
+        this.activeThumb = this.getIndexOfClosestValue(this.internalValue, value);
       }
 
       this.setInternalValue(value);
@@ -54659,7 +52229,7 @@ var __spread = undefined && undefined.__spread || function () {
       var value = this.parseKeyDown(e, this.internalValue[this.activeThumb]);
       if (value == null) return;
       this.setInternalValue(value);
-      this.$emit('change', value);
+      this.$emit('change', this.internalValue);
     },
     setInternalValue: function setInternalValue(value) {
       var _this = this;
@@ -54854,7 +52424,9 @@ __webpack_require__.r(__webpack_exports__);
       return props;
     },
     genHoverIndex: function genHoverIndex(e, i) {
-      return i + (this.isHalfEvent(e) ? 0.5 : 1);
+      var isHalf = this.isHalfEvent(e);
+      if (this.$vuetify.rtl) isHalf = !isHalf;
+      return i + (isHalf ? 0.5 : 1);
     },
     getIconName: function getIconName(props) {
       var isFull = this.isHovering ? props.isHovered : props.isFilled;
@@ -55137,7 +52709,7 @@ var defaultMenuProps = {
   closeOnContentClick: false,
   disableKeys: true,
   openOnClick: false,
-  maxHeight: 300
+  maxHeight: 304
 };
 var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_VTextField_VTextField__WEBPACK_IMPORTED_MODULE_5__["default"], _mixins_comparable__WEBPACK_IMPORTED_MODULE_6__["default"], _mixins_filterable__WEBPACK_IMPORTED_MODULE_7__["default"]);
 /* @vue/component */
@@ -55384,10 +52956,9 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_
       if (this.openOnClear) this.isMenuActive = true;
     },
     closeConditional: function closeConditional(e) {
-      return (// Click originates from outside the menu content
-        this.content && !this.content.contains(e.target) && // Click originates from outside the element
-        this.$el && !this.$el.contains(e.target) && e.target !== this.$el
-      );
+      return !this._isDestroyed && // Click originates from outside the menu content
+      this.content && !this.content.contains(e.target) && // Click originates from outside the element
+      this.$el && !this.$el.contains(e.target) && e.target !== this.$el;
     },
     filterDuplicates: function filterDuplicates(arr) {
       var uniqueValues = new Map();
@@ -55625,7 +53196,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_
     onKeyPress: function onKeyPress(e) {
       var _this = this;
 
-      if (this.multiple) return;
+      if (this.multiple || this.readonly) return;
       var KEYBOARD_LOOKUP_THRESHOLD = 1000; // milliseconds
 
       var now = performance.now();
@@ -56378,6 +53949,7 @@ var BaseSlideGroup = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_6__["default"]
   },
   data: function data() {
     return {
+      internalItemsLength: 0,
       isOverflowing: false,
       resizeTimeout: 0,
       startX: 0,
@@ -56397,7 +53969,9 @@ var BaseSlideGroup = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_6__["default"]
     },
     classes: function classes() {
       return __assign({}, _VItemGroup_VItemGroup__WEBPACK_IMPORTED_MODULE_3__["BaseItemGroup"].options.computed.classes.call(this), {
-        'v-slide-group': true
+        'v-slide-group': true,
+        'v-slide-group--has-affixes': this.hasAffixes,
+        'v-slide-group--is-overflowing': this.isOverflowing
       });
     },
     hasAffixes: function hasAffixes() {
@@ -56427,6 +54001,13 @@ var BaseSlideGroup = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_6__["default"]
     scrollOffset: function scrollOffset(val) {
       this.$refs.content.style.transform = "translateX(" + -val + "px)";
     }
+  },
+  beforeUpdate: function beforeUpdate() {
+    this.internalItemsLength = (this.$children || []).length;
+  },
+  updated: function updated() {
+    if (this.internalItemsLength === (this.$children || []).length) return;
+    this.setWidths();
   },
   methods: {
     genNext: function genNext() {
@@ -56480,10 +54061,10 @@ var BaseSlideGroup = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_6__["default"]
         }
       }, this[icon + "Icon"]);
     },
+    // Always generate prev for scrollable hint
     genPrev: function genPrev() {
       var _this = this;
 
-      if (!this.hasAffixes) return null;
       var slot = this.$scopedSlots.prev ? this.$scopedSlots.prev({}) : this.$slots.prev || this.__cachedPrev;
       return this.$createElement('div', {
         staticClass: 'v-slide-group__prev',
@@ -56553,12 +54134,21 @@ var BaseSlideGroup = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_6__["default"]
       var maxScrollOffset = content.clientWidth - wrapper.clientWidth;
       content.style.setProperty('transition', null);
       content.style.setProperty('willChange', null);
-      /* istanbul ignore else */
 
-      if (this.scrollOffset < 0 || !this.isOverflowing) {
-        this.scrollOffset = 0;
-      } else if (this.scrollOffset >= maxScrollOffset) {
-        this.scrollOffset = maxScrollOffset;
+      if (this.$vuetify.rtl) {
+        /* istanbul ignore else */
+        if (this.scrollOffset > 0 || !this.isOverflowing) {
+          this.scrollOffset = 0;
+        } else if (this.scrollOffset <= -maxScrollOffset) {
+          this.scrollOffset = -maxScrollOffset;
+        }
+      } else {
+        /* istanbul ignore else */
+        if (this.scrollOffset < 0 || !this.isOverflowing) {
+          this.scrollOffset = 0;
+        } else if (this.scrollOffset >= maxScrollOffset) {
+          this.scrollOffset = maxScrollOffset;
+        }
       }
     },
     overflowCheck: function overflowCheck(e, fn) {
@@ -56828,7 +54418,8 @@ var __assign = undefined && undefined.__assign || function () {
       keyPressed: 0,
       isFocused: false,
       isActive: false,
-      lazyValue: 0
+      lazyValue: 0,
+      noClick: false
     };
   },
   computed: {
@@ -56973,7 +54564,7 @@ var __assign = undefined && undefined.__assign || function () {
       }, this.genChildren());
     },
     genChildren: function genChildren() {
-      return [this.genInput(), this.genTrackContainer(), this.genSteps(), this.genThumbContainer(this.internalValue, this.inputWidth, this.isActive, this.isFocused, this.onThumbMouseDown, this.onFocus)];
+      return [this.genInput(), this.genTrackContainer(), this.genSteps(), this.genThumbContainer(this.internalValue, this.inputWidth, this.isActive, this.isFocused, this.onThumbMouseDown, this.onFocus, this.onBlur)];
     },
     genInput: function genInput() {
       return this.$createElement('input', {
@@ -57041,7 +54632,7 @@ var __assign = undefined && undefined.__assign || function () {
         }
       }, ticks);
     },
-    genThumbContainer: function genThumbContainer(value, valueWidth, isActive, isFocused, onDrag, onFocus, ref) {
+    genThumbContainer: function genThumbContainer(value, valueWidth, isActive, isFocused, onDrag, onFocus, onBlur, ref) {
       if (ref === void 0) {
         ref = 'thumb';
       }
@@ -57070,7 +54661,7 @@ var __assign = undefined && undefined.__assign || function () {
         }, this.$attrs),
         on: {
           focus: onFocus,
-          blur: this.onBlur,
+          blur: onBlur,
           keydown: this.onKeyDown,
           keyup: this.onKeyUp,
           touchstart: onDrag,
@@ -57154,6 +54745,7 @@ var __assign = undefined && undefined.__assign || function () {
 
       if (!Object(_util_helpers__WEBPACK_IMPORTED_MODULE_6__["deepEqual"])(this.oldValue, this.internalValue)) {
         this.$emit('change', this.internalValue);
+        this.noClick = true;
       }
 
       this.isActive = false;
@@ -57173,6 +54765,11 @@ var __assign = undefined && undefined.__assign || function () {
       this.keyPressed = 0;
     },
     onSliderClick: function onSliderClick(e) {
+      if (this.noClick) {
+        this.noClick = false;
+        return;
+      }
+
       var thumb = this.$refs.thumb;
       thumb.focus();
       this.onMouseMove(e);
@@ -58066,7 +55663,7 @@ __webpack_require__.r(__webpack_exports__);
         'v-speed-dial--left': this.left,
         'v-speed-dial--absolute': this.absolute,
         'v-speed-dial--fixed': this.fixed
-      }, _a["v-speed-dial--direction-" + this.direction] = true, _a;
+      }, _a["v-speed-dial--direction-" + this.direction] = true, _a['v-speed-dial--is-active'] = this.isActive, _a;
     }
   },
   render: function render(h) {
@@ -58101,7 +55698,7 @@ __webpack_require__.r(__webpack_exports__);
     if (this.isActive) {
       var btnCount_1 = 0;
       children = (this.$slots.default || []).map(function (b, i) {
-        if (b.tag && typeof b.componentOptions !== 'undefined' && b.componentOptions.Ctor.options.name === 'v-btn') {
+        if (b.tag && typeof b.componentOptions !== 'undefined' && (b.componentOptions.Ctor.options.name === 'v-btn' || b.componentOptions.Ctor.options.name === 'v-tooltip')) {
           btnCount_1++;
           return h('div', {
             style: {
@@ -59551,6 +57148,7 @@ var __values = undefined && undefined.__values || function (o) {
       return __assign({}, _VSlideGroup_VSlideGroup__WEBPACK_IMPORTED_MODULE_0__["BaseSlideGroup"].options.computed.classes.call(this), {
         'v-tabs-bar': true,
         'v-tabs-bar--is-mobile': this.isMobile,
+        // TODO: Remove this and move to v-slide-group
         'v-tabs-bar--show-arrows': this.showArrows
       }, this.themeClasses);
     }
@@ -59928,6 +57526,12 @@ var dirtyTypes = ['color', 'file', 'time', 'date', 'datetime-local', 'week', 'mo
   watch: {
     labelValue: 'setLabelWidth',
     outlined: 'setLabelWidth',
+    label: function label() {
+      this.$nextTick(this.setLabelWidth);
+    },
+    prefix: function prefix() {
+      this.$nextTick(this.setPrefixWidth);
+    },
     isFocused: function isFocused(val) {
       // Sets validationState from validatable
       this.hasColor = val;
@@ -59986,7 +57590,6 @@ var dirtyTypes = ['color', 'file', 'time', 'date', 'datetime-local', 'week', 'mo
       window.requestAnimationFrame(function () {
         _this.$refs.input && _this.$refs.input.blur();
       });
-      this.onBlur(e);
     },
     clearableCallback: function clearableCallback() {
       var _this = this;
@@ -60147,7 +57750,7 @@ var dirtyTypes = ['color', 'file', 'time', 'date', 'datetime-local', 'week', 'mo
       e && this.$emit('blur', e);
     },
     onClick: function onClick() {
-      if (this.isFocused || this.disabled) return;
+      if (this.isFocused || this.disabled || !this.$refs.input) return;
       this.$refs.input.focus();
     },
     onFocus: function onFocus(e) {
@@ -61728,10 +59331,6 @@ __webpack_require__.r(__webpack_exports__);
       type: [Number, String],
       default: 0
     },
-    debounce: {
-      type: [Number, String],
-      default: 0
-    },
     disabled: Boolean,
     fixed: {
       type: Boolean,
@@ -62947,12 +60546,16 @@ var __assign = undefined && undefined.__assign || function () {
     return {
       changedByDelimiters: false,
       internalHeight: undefined,
-      isActive: false,
+      noHeightReset: false,
+      transitionCount: 0,
       isBooted: false,
       isReverse: false
     };
   },
   computed: {
+    isActive: function isActive() {
+      return this.transitionCount > 0;
+    },
     classes: function classes() {
       return __assign({}, _VItemGroup_VItemGroup__WEBPACK_IMPORTED_MODULE_3__["BaseItemGroup"].options.computed.classes.call(this), {
         'v-window--show-arrows-on-hover': this.showArrowsOnHover
@@ -63035,7 +60638,7 @@ var __assign = undefined && undefined.__assign || function () {
         }
       }, [this.$createElement(_VIcon__WEBPACK_IMPORTED_MODULE_2__["default"], {
         props: {
-          size: 40
+          large: true
         }
       }, icon)])]);
     },
@@ -63178,9 +60781,8 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_4__["default"])(_m
   },
   data: function data() {
     return {
-      done: null,
       isActive: false,
-      wasCancelled: false
+      inTransition: false
     };
   },
   computed: {
@@ -63194,12 +60796,6 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_4__["default"])(_m
 
       return typeof this.reverseTransition !== 'undefined' ? this.reverseTransition || '' : this.windowGroup.computedTransition;
     }
-  },
-  mounted: function mounted() {
-    this.$el.addEventListener('transitionend', this.onTransitionEnd, false);
-  },
-  beforeDestroy: function beforeDestroy() {
-    this.$el.removeEventListener('transitionend', this.onTransitionEnd, false);
   },
   methods: {
     genDefaultSlot: function genDefaultSlot() {
@@ -63216,49 +60812,57 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_4__["default"])(_m
         on: this.$listeners
       }, this.showLazyContent(this.genDefaultSlot()));
     },
-    onAfterEnter: function onAfterEnter() {
+    onAfterTransition: function onAfterTransition() {
+      if (!this.inTransition) {
+        return;
+      } // Finalize transition state.
+
+
+      this.inTransition = false;
+
+      if (this.windowGroup.transitionCount > 0) {
+        this.windowGroup.transitionCount--; // Remove container height if we are out of transition
+        // and window group allows its height to be modified
+
+        if (this.windowGroup.transitionCount === 0 && !this.windowGroup.noHeightReset) {
+          this.windowGroup.internalHeight = undefined;
+        }
+      }
+    },
+    onBeforeTransition: function onBeforeTransition() {
+      if (this.inTransition) {
+        return;
+      } // Initialize transition state here.
+
+
+      this.inTransition = true;
+
+      if (this.windowGroup.transitionCount === 0) {
+        // Set initial height for height transition.
+        this.windowGroup.internalHeight = Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["convertToUnit"])(this.windowGroup.$el.clientHeight);
+      }
+
+      this.windowGroup.transitionCount++;
+    },
+    onTransitionCancelled: function onTransitionCancelled() {
+      this.onAfterTransition(); // This should have the same path as normal transition end.
+    },
+    onEnter: function onEnter(el) {
       var _this = this;
 
-      if (this.wasCancelled) {
-        this.wasCancelled = false;
+      if (!this.inTransition) {
         return;
       }
 
-      requestAnimationFrame(function () {
-        _this.windowGroup.internalHeight = undefined;
-        _this.windowGroup.isActive = false;
-      });
-    },
-    onBeforeEnter: function onBeforeEnter() {
-      this.windowGroup.isActive = true;
-    },
-    onBeforeLeave: function onBeforeLeave(el) {
-      this.windowGroup.internalHeight = Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["convertToUnit"])(el.clientHeight);
-    },
-    onEnterCancelled: function onEnterCancelled() {
-      this.wasCancelled = true;
-    },
-    onEnter: function onEnter(el, done) {
-      var _this = this;
-
-      var isBooted = this.windowGroup.isBooted;
-      if (isBooted) this.done = done;
       this.$nextTick(function () {
-        if (!_this.computedTransition) return done();
-        _this.windowGroup.internalHeight = Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["convertToUnit"])(el.clientHeight); // On initial render, there is no transition
-        // Vue leaves a `enter` transition class
-        // if done is called too fast
+        // Do not set height if no transition or cancelled.
+        if (!_this.computedTransition || !_this.inTransition) {
+          return;
+        } // Set transition target height.
 
-        !isBooted && setTimeout(done, 100);
+
+        _this.windowGroup.internalHeight = Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["convertToUnit"])(el.clientHeight);
       });
-    },
-    onTransitionEnd: function onTransitionEnd(e) {
-      // This ensures we only call done
-      // when the element transform
-      // completes
-      if (e.propertyName !== 'transform' || e.target !== this.$el || !this.done) return;
-      this.done();
-      this.done = null;
     }
   },
   render: function render(h) {
@@ -63267,11 +60871,16 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_4__["default"])(_m
         name: this.computedTransition
       },
       on: {
-        afterEnter: this.onAfterEnter,
-        beforeEnter: this.onBeforeEnter,
-        beforeLeave: this.onBeforeLeave,
-        enter: this.onEnter,
-        enterCancelled: this.onEnterCancelled
+        // Handlers for enter windows.
+        beforeEnter: this.onBeforeTransition,
+        afterEnter: this.onAfterTransition,
+        enterCancelled: this.onTransitionCancelled,
+        // Handlers for leave windows.
+        beforeLeave: this.onBeforeTransition,
+        afterLeave: this.onAfterTransition,
+        leaveCancelled: this.onTransitionCancelled,
+        // Enter handler for height transition.
+        enter: this.onEnter
       }
     }, [this.genWindowItem()]);
   }
@@ -64043,19 +61652,19 @@ var ClickOutside = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _click_outside__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./click-outside */ "./src/directives/click-outside/index.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClickOutside", function() { return _click_outside__WEBPACK_IMPORTED_MODULE_0__["default"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClickOutside", function() { return _click_outside__WEBPACK_IMPORTED_MODULE_0__["ClickOutside"]; });
 
 /* harmony import */ var _resize__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./resize */ "./src/directives/resize/index.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Resize", function() { return _resize__WEBPACK_IMPORTED_MODULE_1__["default"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Resize", function() { return _resize__WEBPACK_IMPORTED_MODULE_1__["Resize"]; });
 
 /* harmony import */ var _ripple__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ripple */ "./src/directives/ripple/index.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Ripple", function() { return _ripple__WEBPACK_IMPORTED_MODULE_2__["default"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Ripple", function() { return _ripple__WEBPACK_IMPORTED_MODULE_2__["Ripple"]; });
 
 /* harmony import */ var _scroll__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./scroll */ "./src/directives/scroll/index.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Scroll", function() { return _scroll__WEBPACK_IMPORTED_MODULE_3__["default"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Scroll", function() { return _scroll__WEBPACK_IMPORTED_MODULE_3__["Scroll"]; });
 
 /* harmony import */ var _touch__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./touch */ "./src/directives/touch/index.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Touch", function() { return _touch__WEBPACK_IMPORTED_MODULE_4__["default"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Touch", function() { return _touch__WEBPACK_IMPORTED_MODULE_4__["Touch"]; });
 
 
 
@@ -64658,7 +62267,7 @@ function () {
 
   Vuetify.install = _install__WEBPACK_IMPORTED_MODULE_0__["install"];
   Vuetify.installed = false;
-  Vuetify.version = "2.0.3";
+  Vuetify.version = "2.0.15";
   return Vuetify;
 }();
 
@@ -64807,7 +62416,8 @@ __webpack_require__.r(__webpack_exports__);
       sortDescending: ': Sorted descending. Activate to remove sorting.',
       sortAscending: ': Sorted ascending. Activate to sort descending.',
       sortNone: ': Not sorted. Activate to sort ascending.'
-    }
+    },
+    sortBy: 'Sort by'
   },
   dataFooter: {
     itemsPerPageText: 'Items per page:',
@@ -64852,7 +62462,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _util_console__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../util/console */ "./src/util/console.ts");
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-// Mixins
+var __values = undefined && undefined.__values || function (o) {
+  var m = typeof Symbol === "function" && o[Symbol.iterator],
+      i = 0;
+  if (m) return m.call(o);
+  return {
+    next: function next() {
+      if (o && i >= o.length) o = void 0;
+      return {
+        value: o && o[i++],
+        done: !o
+      };
+    }
+  };
+}; // Mixins
+
+
 
  // Utilities
 
@@ -64878,14 +62503,18 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_2__["default"])(_d
   data: function data() {
     return {
       activatorElement: null,
-      activatorNode: []
+      activatorNode: [],
+      events: ['click', 'mouseenter', 'mouseleave'],
+      listeners: {}
     };
   },
   watch: {
-    activator: function activator() {
-      this.activatorElement = null;
-      this.getActivator();
-    }
+    activator: 'resetActivator',
+    activatorElement: function activatorElement(val) {
+      if (!val) return;
+      this.addActivatorEvents();
+    },
+    openOnHover: 'resetActivator'
   },
   mounted: function mounted() {
     var slotType = Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["getSlotType"])(this, 'activator', true);
@@ -64893,20 +62522,36 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_2__["default"])(_d
     if (slotType && ['v-slot', 'normal'].includes(slotType)) {
       Object(_util_console__WEBPACK_IMPORTED_MODULE_4__["consoleError"])("The activator slot must be bound, try '<template v-slot:activator=\"{ on }\"><v-btn v-on=\"on\">'", this);
     }
+
+    this.getActivator();
+  },
+  beforeDestroy: function beforeDestroy() {
+    this.removeActivatorEvents();
   },
   methods: {
-    getValueProxy: function getValueProxy() {
-      var self = this;
-      return {
-        get value() {
-          return self.isActive;
-        },
+    addActivatorEvents: function addActivatorEvents() {
+      var e_1, _a;
 
-        set value(isActive) {
-          self.isActive = isActive;
+      if (!this.activator || this.disabled || !this.activatorElement) return;
+      this.listeners = this.genActivatorListeners();
+      var keys = Object.keys(this.listeners);
+
+      try {
+        for (var keys_1 = __values(keys), keys_1_1 = keys_1.next(); !keys_1_1.done; keys_1_1 = keys_1.next()) {
+          var key = keys_1_1.value;
+          this.activatorElement.addEventListener(key, this.listeners[key]);
         }
-
-      };
+      } catch (e_1_1) {
+        e_1 = {
+          error: e_1_1
+        };
+      } finally {
+        try {
+          if (keys_1_1 && !keys_1_1.done && (_a = keys_1.return)) _a.call(keys_1);
+        } finally {
+          if (e_1) throw e_1.error;
+        }
+      }
     },
     genActivator: function genActivator() {
       var node = Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["getSlot"])(this, 'activator', Object.assign(this.getValueProxy(), {
@@ -64915,9 +62560,6 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_2__["default"])(_d
       })) || [];
       this.activatorNode = node;
       return node;
-    },
-    getContentSlot: function getContentSlot() {
-      return Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["getSlot"])(this, 'default', this.getValueProxy(), true);
     },
     genActivatorAttributes: function genActivatorAttributes() {
       return {
@@ -64946,9 +62588,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_2__["default"])(_d
         };
       } else {
         listeners.click = function (e) {
-          var activator = _this.getActivator(e);
-
-          if (activator) activator.focus();
+          if (_this.activatorElement) _this.activatorElement.focus();
           _this.isActive = !_this.isActive;
         };
       }
@@ -64961,8 +62601,15 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_2__["default"])(_d
       var activator = null;
 
       if (this.activator) {
-        var target = this.internalActivator ? this.$el : document;
-        activator = typeof this.activator === 'string' ? target.querySelector(this.activator) : this.activator;
+        var target = this.internalActivator ? this.$el : document; // Selector
+
+        if (typeof this.activator === 'string') {
+          activator = target.querySelector(this.activator); // VNode
+        } else if (this.activator.$el) {
+          activator = this.activator.$el; // HTMLElement | Element
+        } else {
+          activator = this.activator;
+        }
       } else if (e) {
         activator = e.currentTarget || e.target;
       } else if (this.activatorNode.length) {
@@ -64971,6 +62618,51 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_2__["default"])(_d
 
       this.activatorElement = activator;
       return this.activatorElement;
+    },
+    getContentSlot: function getContentSlot() {
+      return Object(_util_helpers__WEBPACK_IMPORTED_MODULE_3__["getSlot"])(this, 'default', this.getValueProxy(), true);
+    },
+    getValueProxy: function getValueProxy() {
+      var self = this;
+      return {
+        get value() {
+          return self.isActive;
+        },
+
+        set value(isActive) {
+          self.isActive = isActive;
+        }
+
+      };
+    },
+    removeActivatorEvents: function removeActivatorEvents() {
+      var e_2, _a;
+
+      if (!this.activator || !this.activatorElement) return;
+      var keys = Object.keys(this.listeners);
+
+      try {
+        for (var keys_2 = __values(keys), keys_2_1 = keys_2.next(); !keys_2_1.done; keys_2_1 = keys_2.next()) {
+          var key = keys_2_1.value;
+          this.activatorElement.removeEventListener(key, this.listeners[key]);
+        }
+      } catch (e_2_1) {
+        e_2 = {
+          error: e_2_1
+        };
+      } finally {
+        try {
+          if (keys_2_1 && !keys_2_1.done && (_a = keys_2.return)) _a.call(keys_2);
+        } finally {
+          if (e_2) throw e_2.error;
+        }
+      }
+
+      this.listeners = {};
+    },
+    resetActivator: function resetActivator() {
+      this.activatorElement = null;
+      this.getActivator();
     }
   }
 }));
@@ -65496,7 +63188,7 @@ function searchChildren(children) {
     getClickableDependentElements: function getClickableDependentElements() {
       var result = [this.$el];
       if (this.$refs.content) result.push(this.$refs.content);
-      if (this.overlay) result.push(this.overlay);
+      if (this.overlay) result.push(this.overlay.$el);
       result.push.apply(result, __spread(this.getOpenDependentElements()));
       return result;
     }
@@ -65910,6 +63602,7 @@ __webpack_require__.r(__webpack_exports__);
  // Utilities
 
 
+ // Types
 
 var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_3__["default"])(_stackable__WEBPACK_IMPORTED_MODULE_1__["default"], _positionable__WEBPACK_IMPORTED_MODULE_0__["default"], _activatable__WEBPACK_IMPORTED_MODULE_2__["default"]);
 /* @vue/component */
@@ -65966,7 +63659,6 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_3__["default"])(_s
       absoluteY: 0,
       activatedBy: null,
       activatorFixed: false,
-      activatorNode: null,
       dimensions: {
         activator: {
           top: 0,
@@ -66307,6 +63999,8 @@ __webpack_require__.r(__webpack_exports__);
 
         if (_this.activeZIndex !== undefined) {
           _this.overlay.zIndex = String(_this.activeZIndex - 1);
+        } else if (_this.$el) {
+          _this.overlay.zIndex = Object(_util_helpers__WEBPACK_IMPORTED_MODULE_1__["getZIndex"])(_this.$el);
         }
 
         _this.overlay.value = true;
@@ -67934,8 +65628,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     },
     isFocused: function isFocused(val) {
       // Should not check validation
-      // if disabled or readonly
-      if (!val && !this.disabled && !this.readonly) {
+      // if disabled
+      if (!val && !this.disabled) {
         this.hasFocused = true;
         this.validateOnBlur && this.validate();
       }
@@ -68201,10 +65895,10 @@ function (_super) {
       md: 1280,
       lg: 1920
     };
-    _this.scrollbarWidth = 16;
+    _this.scrollBarWidth = 16;
     _this.resizeTimeout = 0;
     _this.thresholds = __assign({}, _this.thresholds, options.thresholds);
-    _this.scrollbarWidth = options.scrollBarWidth || _this.scrollbarWidth;
+    _this.scrollBarWidth = options.scrollBarWidth || _this.scrollBarWidth;
 
     _this.init();
 
@@ -68236,9 +65930,9 @@ function (_super) {
     var width = this.getClientWidth();
     var xs = width < this.thresholds.xs;
     var sm = width < this.thresholds.sm && !xs;
-    var md = width < this.thresholds.md - this.scrollbarWidth && !(sm || xs);
-    var lg = width < this.thresholds.lg - this.scrollbarWidth && !(md || sm || xs);
-    var xl = width >= this.thresholds.lg - this.scrollbarWidth;
+    var md = width < this.thresholds.md - this.scrollBarWidth && !(sm || xs);
+    var lg = width < this.thresholds.lg - this.scrollBarWidth && !(md || sm || xs);
+    var xl = width >= this.thresholds.lg - this.scrollBarWidth;
     this.height = height;
     this.width = width;
     this.xs = xs;
@@ -68703,7 +66397,9 @@ var icons = {
   first: 'fas fa-step-backward',
   last: 'fas fa-step-forward',
   unfold: 'fas fa-arrows-alt-v',
-  file: 'fas fa-paperclip'
+  file: 'fas fa-paperclip',
+  plus: 'fas fa-plus',
+  minus: 'fas fa-minus'
 };
 /* harmony default export */ __webpack_exports__["default"] = (icons);
 
@@ -68739,7 +66435,7 @@ var icons = {
   menu: 'fa fa-bars',
   subgroup: 'fa fa-caret-down',
   dropdown: 'fa fa-caret-down',
-  radioOn: 'fa fa-dot-circle',
+  radioOn: 'fa fa-dot-circle-o',
   radioOff: 'fa fa-circle-o',
   edit: 'fa fa-pencil',
   ratingEmpty: 'fa fa-star-o',
@@ -68749,7 +66445,9 @@ var icons = {
   first: 'fa fa-step-backward',
   last: 'fa fa-step-forward',
   unfold: 'fa fa-angle-double-down',
-  file: 'fa fa-paperclip'
+  file: 'fa fa-paperclip',
+  plus: 'fa fa-plus',
+  minus: 'fa fa-minus'
 };
 /* harmony default export */ __webpack_exports__["default"] = (icons);
 
@@ -68824,7 +66522,9 @@ var icons = {
   first: 'first_page',
   last: 'last_page',
   unfold: 'unfold_more',
-  file: 'attach_file'
+  file: 'attach_file',
+  plus: 'add',
+  minus: 'remove'
 };
 /* harmony default export */ __webpack_exports__["default"] = (icons);
 
@@ -68870,7 +66570,9 @@ var icons = {
   first: 'M18.41,16.59L13.82,12L18.41,7.41L17,6L11,12L17,18L18.41,16.59M6,6H8V18H6V6Z',
   last: 'M5.59,7.41L10.18,12L5.59,16.59L7,18L13,12L7,6L5.59,7.41M16,6H18V18H16V6Z',
   unfold: 'M12,18.17L8.83,15L7.42,16.41L12,21L16.59,16.41L15.17,15M12,5.83L15.17,9L16.58,7.59L12,3L7.41,7.59L8.83,9L12,5.83Z',
-  file: 'M16.5,6V17.5C16.5,19.71 14.71,21.5 12.5,21.5C10.29,21.5 8.5,19.71 8.5,17.5V5C8.5,3.62 9.62,2.5 11,2.5C12.38,2.5 13.5,3.62 13.5,5V15.5C13.5,16.05 13.05,16.5 12.5,16.5C11.95,16.5 11.5,16.05 11.5,15.5V6H10V15.5C10,16.88 11.12,18 12.5,18C13.88,18 15,16.88 15,15.5V5C15,2.79 13.21,1 11,1C8.79,1 7,2.79 7,5V17.5C7,20.54 9.46,23 12.5,23C15.54,23 18,20.54 18,17.5V6H16.5Z'
+  file: 'M16.5,6V17.5C16.5,19.71 14.71,21.5 12.5,21.5C10.29,21.5 8.5,19.71 8.5,17.5V5C8.5,3.62 9.62,2.5 11,2.5C12.38,2.5 13.5,3.62 13.5,5V15.5C13.5,16.05 13.05,16.5 12.5,16.5C11.95,16.5 11.5,16.05 11.5,15.5V6H10V15.5C10,16.88 11.12,18 12.5,18C13.88,18 15,16.88 15,15.5V5C15,2.79 13.21,1 11,1C8.79,1 7,2.79 7,5V17.5C7,20.54 9.46,23 12.5,23C15.54,23 18,20.54 18,17.5V6H16.5Z',
+  plus: 'M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z',
+  minus: 'M19,13H5V11H19V13Z'
 };
 /* harmony default export */ __webpack_exports__["default"] = (icons);
 
@@ -68916,7 +66618,9 @@ var icons = {
   first: 'mdi-page-first',
   last: 'mdi-page-last',
   unfold: 'mdi-unfold-more-horizontal',
-  file: 'mdi-paperclip'
+  file: 'mdi-paperclip',
+  plus: 'mdi-plus',
+  minus: 'mdi-minus'
 };
 /* harmony default export */ __webpack_exports__["default"] = (icons);
 
@@ -69173,22 +66877,6 @@ var __extends = undefined && undefined.__extends || function () {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
   };
 }();
-
-var __assign = undefined && undefined.__assign || function () {
-  __assign = Object.assign || function (t) {
-    for (var s, i = 1, n = arguments.length; i < n; i++) {
-      s = arguments[i];
-
-      for (var p in s) {
-        if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
-      }
-    }
-
-    return t;
-  };
-
-  return __assign.apply(this, arguments);
-};
 /* eslint-disable no-multi-spaces */
 // Extensions
 
@@ -69235,13 +66923,14 @@ function (_super) {
     _this.defaults = _this.themes;
     _this.isDark = null;
     _this.vueInstance = null;
+    _this.vueMeta = false;
 
     if (options.disable) {
       _this.disabled = true;
       return _this;
     }
 
-    _this.options = __assign({}, _this.options, options.options);
+    _this.options = options.options;
     _this.dark = Boolean(options.dark);
     var themes = options.themes || {};
     _this.themes = {
@@ -69255,6 +66944,7 @@ function (_super) {
     // When setting css, check for element
     // and apply new values
     set: function set(val) {
+      if (this.vueMeta) return;
       this.checkOrCreateStyleElement() && (this.styleEl.innerHTML = val);
     },
     enumerable: true,
@@ -69292,10 +66982,10 @@ function (_super) {
     if (this.disabled) return;
     /* istanbul ignore else */
 
-    if (ssrContext) {
-      this.initSSR(ssrContext);
-    } else if (root.$isServer && root.$meta) {
+    if (root.$meta) {
       this.initVueMeta(root);
+    } else if (ssrContext) {
+      this.initSSR(ssrContext);
     }
 
     this.initTheme();
@@ -69353,17 +67043,31 @@ function (_super) {
   };
 
   Theme.prototype.initVueMeta = function (root) {
-    var options = this.options || {};
-    root.$children.push(new vue__WEBPACK_IMPORTED_MODULE_2___default.a({
-      head: {
-        style: [{
-          cssText: this.generatedStyles,
+    var _this = this;
+
+    this.vueMeta = true;
+    var metaKeyName = root.$meta().getOptions().keyName;
+    var metaInfo = root.$options[metaKeyName] || {};
+
+    root.$options[metaKeyName] = function () {
+      metaInfo.style = metaInfo.style || [];
+      var vuetifyStylesheet = metaInfo.style.find(function (s) {
+        return s.id === 'vuetify-theme-stylesheet';
+      });
+
+      if (!vuetifyStylesheet) {
+        metaInfo.style.push({
+          cssText: _this.generatedStyles,
           type: 'text/css',
           id: 'vuetify-theme-stylesheet',
-          nonce: options.cspNonce
-        }]
+          nonce: _this.options && _this.options.cspNonce || undefined
+        });
+      } else {
+        vuetifyStylesheet.cssText = _this.generatedStyles;
       }
-    }));
+
+      return metaInfo;
+    };
   };
 
   Theme.prototype.initSSR = function (ssrContext) {
@@ -70569,7 +68273,7 @@ function dedupeModelListeners(data) {
 /*!*****************************!*\
   !*** ./src/util/helpers.ts ***!
   \*****************************/
-/*! exports provided: createSimpleFunctional, createSimpleTransition, createJavaScriptTransition, directiveConfig, addOnceEventListener, passiveSupported, addPassiveEventListener, getNestedValue, deepEqual, getObjectValueByPath, getPropertyFromItem, createRange, getZIndex, escapeHTML, filterObjectOnKeys, convertToUnit, kebabCase, isObject, keyCodes, remapInternalIcon, keys, camelize, arrayDiff, upperFirst, groupByProperty, wrapInArray, sortItems, defaultFilter, searchItems, getSlotType, debounce, getPrefixedScopedSlots, getSlot, clamp, padEnd, chunk, humanReadableFileSize */
+/*! exports provided: createSimpleFunctional, createSimpleTransition, createJavaScriptTransition, directiveConfig, addOnceEventListener, passiveSupported, addPassiveEventListener, getNestedValue, deepEqual, getObjectValueByPath, getPropertyFromItem, createRange, getZIndex, escapeHTML, filterObjectOnKeys, convertToUnit, kebabCase, isObject, keyCodes, remapInternalIcon, keys, camelize, arrayDiff, upperFirst, groupByProperty, wrapInArray, sortItems, defaultFilter, searchItems, getSlotType, debounce, getPrefixedScopedSlots, getSlot, clamp, padEnd, chunk, humanReadableFileSize, camelizeObjectKeys */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -70611,6 +68315,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "padEnd", function() { return padEnd; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "chunk", function() { return chunk; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "humanReadableFileSize", function() { return humanReadableFileSize; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "camelizeObjectKeys", function() { return camelizeObjectKeys; });
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "vue");
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(vue__WEBPACK_IMPORTED_MODULE_0__);
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -71034,10 +68739,15 @@ function sortItems(items, sortBy, sortDesc, locale, customSorters) {
         _a = __read([sortB, sortA], 2), sortA = _a[0], sortB = _a[1];
       }
 
-      if (customSorters && customSorters[sortKey]) return customSorters[sortKey](sortA, sortB); // Check if both cannot be evaluated
+      if (customSorters && customSorters[sortKey]) {
+        var customResult = customSorters[sortKey](sortA, sortB);
+        if (!customResult) continue;
+        return customResult;
+      } // Check if both cannot be evaluated
+
 
       if (sortA === null && sortB === null) {
-        return 0;
+        continue;
       }
 
       _b = __read([sortA, sortB].map(function (s) {
@@ -71045,8 +68755,8 @@ function sortItems(items, sortBy, sortDesc, locale, customSorters) {
       }), 2), sortA = _b[0], sortB = _b[1];
 
       if (sortA !== sortB) {
-        if (!isNaN(sortA) && !isNaN(sortB)) return Number(sortA) - Number(sortB);
-        return sortA.localeCompare(sortB, locale);
+        var sortResult = !isNaN(sortA) && !isNaN(sortB) ? Number(sortA) - Number(sortB) : sortA.localeCompare(sortB, locale);
+        if (sortResult) return sortResult;
       }
     }
 
@@ -71174,6 +68884,13 @@ function humanReadableFileSize(bytes, binary) {
   }
 
   return bytes.toFixed(1) + " " + prefix[unit] + "B";
+}
+function camelizeObjectKeys(obj) {
+  if (!obj) return {};
+  return Object.keys(obj).reduce(function (o, key) {
+    o[camelize(key)] = obj[key];
+    return o;
+  }, {});
 }
 
 /***/ }),
@@ -71456,7 +69173,8 @@ var _default = {
       sortDescending: ': Sorted descending. Activate to remove sorting.',
       sortAscending: ': Sorted ascending. Activate to sort descending.',
       sortNone: ': Not sorted. Activate to sort ascending.'
-    }
+    },
+    sortBy: 'Sort by'
   },
   dataFooter: {
     itemsPerPageText: 'العناصر لكل صفحة:',
@@ -71514,7 +69232,8 @@ var _default = {
       sortDescending: ': Sorted descending. Activate to remove sorting.',
       sortAscending: ': Sorted ascending. Activate to sort descending.',
       sortNone: ': Not sorted. Activate to sort ascending.'
-    }
+    },
+    sortBy: 'Sort by'
   },
   dataFooter: {
     itemsPerPageText: 'Items per page:',
@@ -71542,338 +69261,6 @@ var _default = {
 };
 exports.default = _default;
 //# sourceMappingURL=en.js.map
-
-/***/ }),
-
-/***/ "./node_modules/vuetify/lib/util/colors.js":
-/*!*************************************************!*\
-  !*** ./node_modules/vuetify/lib/util/colors.js ***!
-  \*************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-const red = Object.freeze({
-  base: '#f44336',
-  lighten5: '#ffebee',
-  lighten4: '#ffcdd2',
-  lighten3: '#ef9a9a',
-  lighten2: '#e57373',
-  lighten1: '#ef5350',
-  darken1: '#e53935',
-  darken2: '#d32f2f',
-  darken3: '#c62828',
-  darken4: '#b71c1c',
-  accent1: '#ff8a80',
-  accent2: '#ff5252',
-  accent3: '#ff1744',
-  accent4: '#d50000'
-});
-const pink = Object.freeze({
-  base: '#e91e63',
-  lighten5: '#fce4ec',
-  lighten4: '#f8bbd0',
-  lighten3: '#f48fb1',
-  lighten2: '#f06292',
-  lighten1: '#ec407a',
-  darken1: '#d81b60',
-  darken2: '#c2185b',
-  darken3: '#ad1457',
-  darken4: '#880e4f',
-  accent1: '#ff80ab',
-  accent2: '#ff4081',
-  accent3: '#f50057',
-  accent4: '#c51162'
-});
-const purple = Object.freeze({
-  base: '#9c27b0',
-  lighten5: '#f3e5f5',
-  lighten4: '#e1bee7',
-  lighten3: '#ce93d8',
-  lighten2: '#ba68c8',
-  lighten1: '#ab47bc',
-  darken1: '#8e24aa',
-  darken2: '#7b1fa2',
-  darken3: '#6a1b9a',
-  darken4: '#4a148c',
-  accent1: '#ea80fc',
-  accent2: '#e040fb',
-  accent3: '#d500f9',
-  accent4: '#aa00ff'
-});
-const deepPurple = Object.freeze({
-  base: '#673ab7',
-  lighten5: '#ede7f6',
-  lighten4: '#d1c4e9',
-  lighten3: '#b39ddb',
-  lighten2: '#9575cd',
-  lighten1: '#7e57c2',
-  darken1: '#5e35b1',
-  darken2: '#512da8',
-  darken3: '#4527a0',
-  darken4: '#311b92',
-  accent1: '#b388ff',
-  accent2: '#7c4dff',
-  accent3: '#651fff',
-  accent4: '#6200ea'
-});
-const indigo = Object.freeze({
-  base: '#3f51b5',
-  lighten5: '#e8eaf6',
-  lighten4: '#c5cae9',
-  lighten3: '#9fa8da',
-  lighten2: '#7986cb',
-  lighten1: '#5c6bc0',
-  darken1: '#3949ab',
-  darken2: '#303f9f',
-  darken3: '#283593',
-  darken4: '#1a237e',
-  accent1: '#8c9eff',
-  accent2: '#536dfe',
-  accent3: '#3d5afe',
-  accent4: '#304ffe'
-});
-const blue = Object.freeze({
-  base: '#2196f3',
-  lighten5: '#e3f2fd',
-  lighten4: '#bbdefb',
-  lighten3: '#90caf9',
-  lighten2: '#64b5f6',
-  lighten1: '#42a5f5',
-  darken1: '#1e88e5',
-  darken2: '#1976d2',
-  darken3: '#1565c0',
-  darken4: '#0d47a1',
-  accent1: '#82b1ff',
-  accent2: '#448aff',
-  accent3: '#2979ff',
-  accent4: '#2962ff'
-});
-const lightBlue = Object.freeze({
-  base: '#03a9f4',
-  lighten5: '#e1f5fe',
-  lighten4: '#b3e5fc',
-  lighten3: '#81d4fa',
-  lighten2: '#4fc3f7',
-  lighten1: '#29b6f6',
-  darken1: '#039be5',
-  darken2: '#0288d1',
-  darken3: '#0277bd',
-  darken4: '#01579b',
-  accent1: '#80d8ff',
-  accent2: '#40c4ff',
-  accent3: '#00b0ff',
-  accent4: '#0091ea'
-});
-const cyan = Object.freeze({
-  base: '#00bcd4',
-  lighten5: '#e0f7fa',
-  lighten4: '#b2ebf2',
-  lighten3: '#80deea',
-  lighten2: '#4dd0e1',
-  lighten1: '#26c6da',
-  darken1: '#00acc1',
-  darken2: '#0097a7',
-  darken3: '#00838f',
-  darken4: '#006064',
-  accent1: '#84ffff',
-  accent2: '#18ffff',
-  accent3: '#00e5ff',
-  accent4: '#00b8d4'
-});
-const teal = Object.freeze({
-  base: '#009688',
-  lighten5: '#e0f2f1',
-  lighten4: '#b2dfdb',
-  lighten3: '#80cbc4',
-  lighten2: '#4db6ac',
-  lighten1: '#26a69a',
-  darken1: '#00897b',
-  darken2: '#00796b',
-  darken3: '#00695c',
-  darken4: '#004d40',
-  accent1: '#a7ffeb',
-  accent2: '#64ffda',
-  accent3: '#1de9b6',
-  accent4: '#00bfa5'
-});
-const green = Object.freeze({
-  base: '#4caf50',
-  lighten5: '#e8f5e9',
-  lighten4: '#c8e6c9',
-  lighten3: '#a5d6a7',
-  lighten2: '#81c784',
-  lighten1: '#66bb6a',
-  darken1: '#43a047',
-  darken2: '#388e3c',
-  darken3: '#2e7d32',
-  darken4: '#1b5e20',
-  accent1: '#b9f6ca',
-  accent2: '#69f0ae',
-  accent3: '#00e676',
-  accent4: '#00c853'
-});
-const lightGreen = Object.freeze({
-  base: '#8bc34a',
-  lighten5: '#f1f8e9',
-  lighten4: '#dcedc8',
-  lighten3: '#c5e1a5',
-  lighten2: '#aed581',
-  lighten1: '#9ccc65',
-  darken1: '#7cb342',
-  darken2: '#689f38',
-  darken3: '#558b2f',
-  darken4: '#33691e',
-  accent1: '#ccff90',
-  accent2: '#b2ff59',
-  accent3: '#76ff03',
-  accent4: '#64dd17'
-});
-const lime = Object.freeze({
-  base: '#cddc39',
-  lighten5: '#f9fbe7',
-  lighten4: '#f0f4c3',
-  lighten3: '#e6ee9c',
-  lighten2: '#dce775',
-  lighten1: '#d4e157',
-  darken1: '#c0ca33',
-  darken2: '#afb42b',
-  darken3: '#9e9d24',
-  darken4: '#827717',
-  accent1: '#f4ff81',
-  accent2: '#eeff41',
-  accent3: '#c6ff00',
-  accent4: '#aeea00'
-});
-const yellow = Object.freeze({
-  base: '#ffeb3b',
-  lighten5: '#fffde7',
-  lighten4: '#fff9c4',
-  lighten3: '#fff59d',
-  lighten2: '#fff176',
-  lighten1: '#ffee58',
-  darken1: '#fdd835',
-  darken2: '#fbc02d',
-  darken3: '#f9a825',
-  darken4: '#f57f17',
-  accent1: '#ffff8d',
-  accent2: '#ffff00',
-  accent3: '#ffea00',
-  accent4: '#ffd600'
-});
-const amber = Object.freeze({
-  base: '#ffc107',
-  lighten5: '#fff8e1',
-  lighten4: '#ffecb3',
-  lighten3: '#ffe082',
-  lighten2: '#ffd54f',
-  lighten1: '#ffca28',
-  darken1: '#ffb300',
-  darken2: '#ffa000',
-  darken3: '#ff8f00',
-  darken4: '#ff6f00',
-  accent1: '#ffe57f',
-  accent2: '#ffd740',
-  accent3: '#ffc400',
-  accent4: '#ffab00'
-});
-const orange = Object.freeze({
-  base: '#ff9800',
-  lighten5: '#fff3e0',
-  lighten4: '#ffe0b2',
-  lighten3: '#ffcc80',
-  lighten2: '#ffb74d',
-  lighten1: '#ffa726',
-  darken1: '#fb8c00',
-  darken2: '#f57c00',
-  darken3: '#ef6c00',
-  darken4: '#e65100',
-  accent1: '#ffd180',
-  accent2: '#ffab40',
-  accent3: '#ff9100',
-  accent4: '#ff6d00'
-});
-const deepOrange = Object.freeze({
-  base: '#ff5722',
-  lighten5: '#fbe9e7',
-  lighten4: '#ffccbc',
-  lighten3: '#ffab91',
-  lighten2: '#ff8a65',
-  lighten1: '#ff7043',
-  darken1: '#f4511e',
-  darken2: '#e64a19',
-  darken3: '#d84315',
-  darken4: '#bf360c',
-  accent1: '#ff9e80',
-  accent2: '#ff6e40',
-  accent3: '#ff3d00',
-  accent4: '#dd2c00'
-});
-const brown = Object.freeze({
-  base: '#795548',
-  lighten5: '#efebe9',
-  lighten4: '#d7ccc8',
-  lighten3: '#bcaaa4',
-  lighten2: '#a1887f',
-  lighten1: '#8d6e63',
-  darken1: '#6d4c41',
-  darken2: '#5d4037',
-  darken3: '#4e342e',
-  darken4: '#3e2723'
-});
-const blueGrey = Object.freeze({
-  base: '#607d8b',
-  lighten5: '#eceff1',
-  lighten4: '#cfd8dc',
-  lighten3: '#b0bec5',
-  lighten2: '#90a4ae',
-  lighten1: '#78909c',
-  darken1: '#546e7a',
-  darken2: '#455a64',
-  darken3: '#37474f',
-  darken4: '#263238'
-});
-const grey = Object.freeze({
-  base: '#9e9e9e',
-  lighten5: '#fafafa',
-  lighten4: '#f5f5f5',
-  lighten3: '#eeeeee',
-  lighten2: '#e0e0e0',
-  lighten1: '#bdbdbd',
-  darken1: '#757575',
-  darken2: '#616161',
-  darken3: '#424242',
-  darken4: '#212121'
-});
-const shades = Object.freeze({
-  black: '#000000',
-  white: '#ffffff',
-  transparent: 'transparent'
-});
-/* harmony default export */ __webpack_exports__["default"] = (Object.freeze({
-  red,
-  pink,
-  purple,
-  deepPurple,
-  indigo,
-  blue,
-  lightBlue,
-  cyan,
-  teal,
-  green,
-  lightGreen,
-  lime,
-  yellow,
-  amber,
-  orange,
-  deepOrange,
-  brown,
-  blueGrey,
-  grey,
-  shades
-}));
-//# sourceMappingURL=colors.js.map
 
 /***/ }),
 
@@ -72981,26 +70368,23 @@ module.exports = function(module) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var vuetify_lib_util_colors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vuetify/lib/util/colors */ "./node_modules/vuetify/lib/util/colors.js");
-/* harmony import */ var _util_translation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./util/translation */ "./resources/js/util/translation.js");
-/* harmony import */ var vuetify_es5_locale_en__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vuetify/es5/locale/en */ "./node_modules/vuetify/es5/locale/en.js");
-/* harmony import */ var vuetify_es5_locale_en__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(vuetify_es5_locale_en__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var vuetify_es5_locale_ar__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vuetify/es5/locale/ar */ "./node_modules/vuetify/es5/locale/ar.js");
-/* harmony import */ var vuetify_es5_locale_ar__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(vuetify_es5_locale_ar__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm.js");
+/* harmony import */ var _util_translation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util/translation */ "./resources/js/util/translation.js");
+/* harmony import */ var vuetify_es5_locale_en__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vuetify/es5/locale/en */ "./node_modules/vuetify/es5/locale/en.js");
+/* harmony import */ var vuetify_es5_locale_en__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(vuetify_es5_locale_en__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var vuetify_es5_locale_ar__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vuetify/es5/locale/ar */ "./node_modules/vuetify/es5/locale/ar.js");
+/* harmony import */ var vuetify_es5_locale_ar__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(vuetify_es5_locale_ar__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm.js");
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-
 /**
  * First we will load all of this project's JavaScript dependencies which
  * includes Vue and other libraries. It is a great starting point when
  * building robust, powerful web applications using Vue and Laravel.
  */
-
 __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
 
 window.Vue = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.common.js");
@@ -73024,7 +70408,7 @@ Vue.mixin({
       return this.__getTranslation('sentences', property, nested, needle);
     },
     __getTranslation: function __getTranslation(key, property, nested, needle) {
-      var translationStr = Object(_util_translation__WEBPACK_IMPORTED_MODULE_1__["default"])(this.$vuetify.lang.current, key, property, nested);
+      var translationStr = Object(_util_translation__WEBPACK_IMPORTED_MODULE_0__["default"])(this.$vuetify.lang.current, key, property, nested);
 
       if (needle !== '') {
         translationStr = translationStr.replace(/:\w+:/, needle);
@@ -73102,8 +70486,8 @@ var store = new Vuex.Store({
 Vue.use(Vuetify, {
   lang: {
     locales: {
-      ar: vuetify_es5_locale_ar__WEBPACK_IMPORTED_MODULE_3___default.a,
-      en: vuetify_es5_locale_en__WEBPACK_IMPORTED_MODULE_2___default.a
+      ar: vuetify_es5_locale_ar__WEBPACK_IMPORTED_MODULE_2___default.a,
+      en: vuetify_es5_locale_en__WEBPACK_IMPORTED_MODULE_1___default.a
     },
     current: 'en'
   },
@@ -73137,14 +70521,20 @@ var app = new Vue({
     theme: {
       themes: {
         light: {
-          primary: vuetify_lib_util_colors__WEBPACK_IMPORTED_MODULE_0__["default"].blue.lighten1
+          primary: '#1976D2',
+          secondary: '#424242',
+          accent: '#82B1FF',
+          error: '#FF5252',
+          info: '#2196F3',
+          success: '#4CAF50',
+          warning: '#FFC107'
         }
       }
     }
   }),
   el: '#app',
   store: store,
-  computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_4__["mapGetters"])({
+  computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_3__["mapGetters"])({
     locale: 'getLocale',
     title: 'getPageTitle',
     getDrawer: 'getDrawer'
@@ -73179,7 +70569,7 @@ var app = new Vue({
       this.drawer = false;
     }
   },
-  methods: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_4__["mapMutations"])(['changeDrawer']), {
+  methods: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_3__["mapMutations"])(['changeDrawer']), {
     setLocale: function setLocale(locale) {
       var currentLocale = this.$vuetify.lang.current = locale;
 
@@ -73223,20 +70613,10 @@ var app = new Vue({
 
 window._ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 /**
- * We'll load jQuery and the Bootstrap jQuery plugin which provides support
- * for JavaScript based Bootstrap features such as modals and tabs. This
- * code may be modified to fit the specific needs of your application.
- */
-
-try {
-  window.Popper = __webpack_require__(/*! popper.js */ "./node_modules/popper.js/dist/esm/popper.js")["default"];
-} catch (e) {}
-/**
  * We'll load the axios HTTP library which allows us to easily issue requests
  * to our Laravel back-end. This library automatically handles sending the
  * CSRF token as a header based on the value of the "XSRF" token cookie.
  */
-
 
 window.axios = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
@@ -73780,9 +71160,9 @@ var locales = {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(/*! D:\Projects\elixir\resources\js\app.js */"./resources/js/app.js");
-__webpack_require__(/*! D:\Projects\elixir\resources\sass\app.scss */"./resources/sass/app.scss");
-module.exports = __webpack_require__(/*! D:\Projects\elixir\resources\sass\admin\app.scss */"./resources/sass/admin/app.scss");
+__webpack_require__(/*! D:\101\elixir\resources\js\app.js */"./resources/js/app.js");
+__webpack_require__(/*! D:\101\elixir\resources\sass\app.scss */"./resources/sass/app.scss");
+module.exports = __webpack_require__(/*! D:\101\elixir\resources\sass\admin\app.scss */"./resources/sass/admin/app.scss");
 
 
 /***/ })

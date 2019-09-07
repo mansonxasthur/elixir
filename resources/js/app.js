@@ -1,5 +1,3 @@
-import colors from "vuetify/lib/util/colors";
-
 /**
  * First we will load all of this project's JavaScript dependencies which
  * includes Vue and other libraries. It is a great starting point when
@@ -135,7 +133,13 @@ const app = new Vue({
         theme: {
             themes: {
                 light: {
-                    primary: colors.blue.lighten1,
+                    primary: '#1976D2',
+                    secondary: '#424242',
+                    accent: '#82B1FF',
+                    error: '#FF5252',
+                    info: '#2196F3',
+                    success: '#4CAF50',
+                    warning: '#FFC107',
                 }
             }
         }

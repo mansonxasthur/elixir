@@ -5,12 +5,12 @@
         <v-card>
             <v-card-title>
                 <v-btn color="primary" @click="create">
-                    <v-icon left>add</v-icon> New Admin
+                    <v-icon left>mdi-plus</v-icon> New Admin
                 </v-btn>
                 <v-spacer></v-spacer>
                 <v-text-field
                         v-model="search"
-                        append-icon="search"
+                        append-icon="mdi-magnify"
                         label="Search"
                         single-line
                         hide-details

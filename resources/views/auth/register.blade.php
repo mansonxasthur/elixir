@@ -8,7 +8,7 @@
                     <v-card-title>
                         <v-img
                                 max-width="30%"
-                                src="https://digitalsigma.io/assets/img/logo_md.webp"
+                                src="https://mx13.io/assets/logo.webp"
                                 class="mx-auto"></v-img>
                     </v-card-title>
                     <v-toolbar dark color="primary">
@@ -19,7 +19,7 @@
                         <v-card-text>
                             <!-- Name -->
                             <v-text-field
-                                    prepend-icon="person"
+                                    prepend-icon="mdi-account"
                                     name="name"
                                     label="{{ __('Name') }}"
                                     type="text"
@@ -35,7 +35,7 @@
 
                             <!-- E-Mail -->
                             <v-text-field
-                                    prepend-icon="email"
+                                    prepend-icon="mdi-email"
                                     name="email"
                                     label="{{ __('E-Mail Address') }}"
                                     type="email"
@@ -52,7 +52,7 @@
                             <!-- Password -->
                             <v-text-field
                                     id="password"
-                                    prepend-icon="lock"
+                                    prepend-icon="mdi-lock"
                                     name="password"
                                     label="{{ __('Password') }}"
                                     type="password"
@@ -67,8 +67,8 @@
 
                             <!-- Password Confirmation -->
                             <v-text-field
-                                    id="passwordConfiramtion"
-                                    prepend-icon="lock"
+                                    id="passwordConfirmation"
+                                    prepend-icon="mdi-lock"
                                     name="password_confirmation"
                                     label="{{ __('Password Confirmation') }}"
                                     type="password"

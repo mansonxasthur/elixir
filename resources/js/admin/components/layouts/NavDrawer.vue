@@ -8,16 +8,18 @@
         <v-container fill-height fluid pa-0>
             <v-layout column>
                 <v-flex shrink>
-                    <v-list>
+                    <v-list shaped>
 
-                        <v-list-item v-for="(item, i) in navItems" :key="i" :href="item.uri">
-                            <v-list-item-icon>
-                                <v-icon :color="getColor(item)">{{ item.icon }}</v-icon>
-                            </v-list-item-icon>
-                            <v-list-item-content :class="getColor(item) + '--text'">
-                                <v-list-item-title v-text="item.title"></v-list-item-title>
-                            </v-list-item-content>
-                        </v-list-item>
+                        <v-list-item-group v-model="item" color="primary">
+                            <v-list-item v-for="(item, i) in navItems" :key="i" :href="item.uri">
+                                <v-list-item-icon>
+                                    <v-icon>{{ item.icon }}</v-icon>
+                                </v-list-item-icon>
+                                <v-list-item-content>
+                                    <v-list-item-title v-text="item.title"></v-list-item-title>
+                                </v-list-item-content>
+                            </v-list-item>
+                        </v-list-item-group>
 
                     </v-list>
                 </v-flex>
@@ -26,9 +28,9 @@
                         <v-flex>
                             <v-list>
 
-                                <v-list-item href="/ds-admin/settings">
+                                <v-list-item href="/mx-admin/settings">
                                     <v-list-item-icon>
-                                        <v-icon text color="grey lighten-1">settings</v-icon>
+                                        <v-icon text color="grey lighten-1">mdi-settings</v-icon>
                                     </v-list-item-icon>
                                     <v-list-item-content class="grey--text text-lighten-2">
                                         <v-list-item-title>Settings</v-list-item-title>
@@ -36,7 +38,7 @@
                                 </v-list-item>
                                 <v-list-item @click="logout" class="hidden-md-and-up">
                                     <v-list-item-icon>
-                                        <v-icon text color="grey lighten-1">exit_to_app</v-icon>
+                                        <v-icon text color="grey lighten-1">mdi-exit-to-app</v-icon>
                                     </v-list-item-icon>
                                     <v-list-item-content class="grey--text text-lighten-2">
                                         <v-list-item-title>Logout</v-list-item-title>
@@ -59,19 +61,27 @@
         name: "NavDrawer",
         data() {
             return {
+                item: null,
                 navItems: [
                     {
-                        uri: '/ds-admin',
-                        icon: 'dashboard',
+                        uri: '/mx-admin',
+                        icon: 'mdi-view-dashboard',
                         title: 'Dashboard',
                     },
                     {
-                        uri: '/ds-admin/admins',
-                        icon: 'people',
+                        uri: '/mx-admin/admins',
+                        icon: 'mdi-account-multiple',
                         title: 'Admins',
                     }
                 ]
             }
+        },
+        created() {
+          Object.keys(this.navItems).forEach(key => {
+              if(this.navItems[key].uri === window.location.pathname) {
+                  this.item = Number(key);
+              }
+          })
         },
         computed: {
             ...mapGetters(['getDrawer']),
@@ -87,11 +97,8 @@
         methods: {
             ...mapMutations(['changeDrawer']),
             logout() {
-                axios.post('/ds-admin/logout')
-                    .then(() => { window.location = '/ds-admin/login'; });
-            },
-            getColor(item) {
-                return item.uri === window.location.pathname ? 'primary' : '';
+                axios.post('/mx-admin/logout')
+                    .then(() => { window.location = '/mx-admin/login'; });
             }
         }
     }

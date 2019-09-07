@@ -8,7 +8,7 @@
                     <v-card-title>
                         <v-img
                                 max-width="30%"
-                                src="https://digitalsigma.io/assets/img/logo_md.webp"
+                                src="https://mx13.io/assets/logo.webp"
                                 class="mx-auto"></v-img>
                     </v-card-title>
                     <v-toolbar dark color="primary">
@@ -19,7 +19,7 @@
                         <v-card-text>
 
                             <v-text-field
-                                    prepend-icon="email"
+                                    prepend-icon="mdi-email"
                                     name="email"
                                     label="{{ __('E-Mail Address') }}"
                                     type="email"
@@ -34,7 +34,7 @@
                             @enderror
                             <v-text-field
                                     id="password"
-                                    prepend-icon="lock"
+                                    prepend-icon="mdi-lock"
                                     name="password"
                                     label="{{ __('Password') }}"
                                     type="password"
@@ -58,7 +58,10 @@
                             ></v-checkbox>
                             <v-spacer></v-spacer>
                             <v-btn color="primary" type="submit">{{ __('Login') }}</v-btn>
-                            <v-btn class="btn btn-link" href="{{ route('admin.password.request') }}">
+                        </v-card-actions>
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn text href="{{ route('admin.password.request') }}">
                                 {{ __('Forgot Your Password?') }}
                             </v-btn>
                         </v-card-actions>

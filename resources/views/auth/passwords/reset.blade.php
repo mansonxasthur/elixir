@@ -9,7 +9,7 @@
                 <v-card-title>
                     <v-img
                             max-width="30%"
-                            src="https://digitalsigma.io/assets/img/logo_md.webp"
+                            src="https://mx13.io/assets/logo.webp"
                             class="mx-auto"></v-img>
                 </v-card-title>
                 <v-toolbar dark color="primary">
@@ -20,7 +20,7 @@
                     <input type="hidden" name="token" value="{{ $token }}">
                     <v-card-text>
                         <v-text-field
-                                prepend-icon="email"
+                                prepend-icon="mdi-email"
                                 name="email"
                                 label="{{ __('E-Mail Address') }}"
                                 type="email"
@@ -35,7 +35,7 @@
                         @enderror
                         <v-text-field
                                 id="password"
-                                prepend-icon="lock"
+                                prepend-icon="mdi-lock"
                                 name="password"
                                 label="{{ __('Password') }}"
                                 type="password"
@@ -49,7 +49,7 @@
                         @enderror
                         <v-text-field
                                 id="confirm-password"
-                                prepend-icon="lock"
+                                prepend-icon="mdi-lock"
                                 name="password_confirmation"
                                 label="{{ __('Confirm Password') }}"
                                 type="password"

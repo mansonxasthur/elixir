@@ -20,7 +20,7 @@ Route::get('/', function () {
 });
 
 /******************** Admin Area ***********************/
-Route::prefix('ds-admin')->namespace('Admin')->group(function(){
+Route::prefix('mx-admin')->namespace('Admin')->group(function(){
 
     // Authentication
     Route::get('login', 'Auth\LoginController@showLoginForm')->name('admin.login');
@@ -67,27 +67,33 @@ Route::put('settings/password', 'HomeController@password')->name('admin.info');
 
 $locales = config('app.locales');
 
-Route::get('/', function (Request $request) {
-    $locale = substr($request->headers->get('accept_language'), 0, 2) ?? config('translatable.fallback_locale');
+if (count($locales) > 1) {
+    Route::get('/', function (Request $request) {
+        $locale = substr($request->headers->get('accept_language'), 0, 2) ?? config('translatable.fallback_locale');
 
-    if (in_array($locale, config('translatable.locales'))) {
-        return redirect("/{$locale}");
-    } else {
-        return redirect('/' . config('translatable.fallback_locale'));
-    }
-});
-
-foreach ($locales as $locale) {
-    Route::prefix($locale)->middleware('lang')->group(function () {
-        Route::get('/', function() {
-           return view('welcome');
-        });
+        if (in_array($locale, config('translatable.locales'))) {
+            return redirect("/{$locale}");
+        } else {
+            return redirect('/' . config('translatable.fallback_locale'));
+        }
     });
+
+    foreach ($locales as $locale) {
+        Route::prefix($locale)->middleware('lang')->group(function () {
+            Route::get('/', function() {
+                return view('welcome');
+            });
+        });
+    }
+
+    Route::middleware('lang')->get('/{any}', function () {
+        abort(404);
+    })->where('any', '.*');
 }
 
-Route::middleware('lang')->get('/{any}', function () {
-    abort(404);
-})->where('any', '.*');
+Route::get('/', function() {
+    return view('welcome');
+});
 
 
 

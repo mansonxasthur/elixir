@@ -8,17 +8,18 @@
         <v-container fill-height fluid pa-0>
             <v-layout column>
                 <v-flex shrink>
-                    <v-list>
 
-                        <v-list-item v-for="(item, i) in navItems" :key="i" :href="item.uri">
-                            <v-list-item-action>
-                                <v-icon>{{ item.icon }}</v-icon>
-                            </v-list-item-action>
-                            <v-list-item-content>
-                                <v-list-item-title v-text="item.title"></v-list-item-title>
-                            </v-list-item-content>
-                        </v-list-item>
-
+                    <v-list shaped>
+                        <v-list-item-group v-model="item" color="primary">
+                            <v-list-item v-for="(item, i) in navItems" :key="i" :href="item.uri">
+                                <v-list-item-action>
+                                    <v-icon>{{ item.icon }}</v-icon>
+                                </v-list-item-action>
+                                <v-list-item-content>
+                                    <v-list-item-title v-text="item.title"></v-list-item-title>
+                                </v-list-item-content>
+                            </v-list-item>
+                        </v-list-item-group>
                     </v-list>
                 </v-flex>
                 <v-flex pb-4>
@@ -28,7 +29,7 @@
 
                                 <v-list-item href="/settings">
                                     <v-list-item-icon>
-                                        <v-icon text color="grey lighten-1">settings</v-icon>
+                                        <v-icon text color="grey lighten-1">mdi-settings</v-icon>
                                     </v-list-item-icon>
                                     <v-list-item-content class="grey--text text-lighten-2">
                                         <v-list-item-title>Settings</v-list-item-title>
@@ -59,14 +60,22 @@
         name: "NavDrawer",
         data() {
             return {
+                item: null,
                 navItems: [
                     {
                         uri: '/home',
-                        icon: 'dashboard',
+                        icon: 'mdi-view-dashboard',
                         title: 'Dashboard',
                     },
                 ]
             }
+        },
+        created() {
+            Object.keys(this.navItems).forEach(key => {
+                if(this.navItems[key].uri === window.location.pathname) {
+                    this.item = Number(key);
+                }
+            })
         },
         computed: {
             ...mapGetters(['getDrawer']),
