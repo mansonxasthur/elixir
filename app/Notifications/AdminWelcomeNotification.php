@@ -50,7 +50,7 @@ class AdminWelcomeNotification extends Notification implements ShouldQueue
                     ->line('You are now an admin on our platform')
                     ->line('Your username: ' . $notifiable->email)
                     ->line('Your password: ' . $this->password)
-                    ->action('Sign in now', url('/ds-admin/login'))
+                    ->action('Sign in now', url('/mx-admin/login'))
                     ->salutation('Regards');
     }
 }
