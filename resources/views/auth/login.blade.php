@@ -2,7 +2,7 @@
 
 @section('content')
     <v-container fluid fill-height>
-        <v-layout row wrap align-center justify-center>
+               <v-layout row wrap align-center justify-center>
             <v-flex xs12 sm10 md8 lg5>
                 <v-card>
                     <v-card-title>

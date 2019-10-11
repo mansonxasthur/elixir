@@ -22,10 +22,10 @@
             }
         },
         computed: {
-            ...mapGetters(['getDrawer'])
+            ...mapGetters('drawer', ['getDrawer'])
         },
         methods: {
-            ...mapMutations(['changeDrawer']),
+            ...mapMutations('drawer', ['changeDrawer']),
             logout() {
                 axios.post('/mx-admin/logout')
                     .then(() => { window.location = '/mx-admin/login'; });

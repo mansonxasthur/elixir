@@ -1,5 +1,8 @@
 <template>
-    <v-app-bar :clipped-left="$vuetify.breakpoint.lgAndUp" app color="primary" dark>
+    <v-app-bar
+            :clipped-right="!isLeft"
+            :clipped-left="isLeft"
+            app color="primary" dark>
         <v-app-bar-nav-icon @click.stop="changeDrawer(!getDrawer)"></v-app-bar-nav-icon>
         <v-toolbar-title>Application</v-toolbar-title>
         <v-spacer></v-spacer>
@@ -22,10 +25,10 @@
             }
         },
         computed: {
-            ...mapGetters(['getDrawer'])
+            ...mapGetters('drawer', ['getDrawer', 'isLeft'])
         },
         methods: {
-            ...mapMutations(['changeDrawer']),
+            ...mapMutations('drawer', ['changeDrawer']),
             logout() {
                 axios.post('/logout')
                     .then(() => { window.location = '/'; });

@@ -2,6 +2,7 @@
     <v-navigation-drawer
             v-model="drawer"
             :clipped="$vuetify.breakpoint.lgAndUp"
+            :right="right"
             disable-resize-watcher
             app
     >
@@ -37,7 +38,7 @@
                                 </v-list-item>
                                 <v-list-item @click="logout" class="hidden-md-and-up">
                                     <v-list-item-icon>
-                                        <v-icon text color="grey lighten-1">exit_to_app</v-icon>
+                                        <v-icon text color="grey lighten-1">mdi-exit-to-app</v-icon>
                                     </v-list-item-icon>
                                     <v-list-item-content class="grey--text text-lighten-2">
                                         <v-list-item-title>Logout</v-list-item-title>
@@ -78,7 +79,7 @@
             })
         },
         computed: {
-            ...mapGetters(['getDrawer']),
+            ...mapGetters('drawer', ['getDrawer', 'isLeft']),
             drawer: {
                 get: function () {
                     return this.getDrawer;
@@ -87,9 +88,12 @@
                     this.changeDrawer(val);
                 }
             },
+            right() {
+                return !this.isLeft;
+            }
         },
         methods: {
-            ...mapMutations(['changeDrawer']),
+            ...mapMutations('drawer', ['changeDrawer']),
             logout() {
                 axios.post('/logout')
                     .then(() => { window.location = '/'; });

@@ -84,20 +84,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Application Locales
-    |--------------------------------------------------------------------------
-    |
-    | The application locales array
-    |
-    */
-
-    'locales' => [
-        'ar',
-//        'en'
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Application Fallback Locale
     |--------------------------------------------------------------------------
     |
@@ -189,7 +175,6 @@ return [
         App\Providers\EventServiceProvider::class,
         // App\Providers\TelescopeServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-
     ],
 
     /*
@@ -240,7 +225,8 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-
+        'Admin' => \App\Facades\Admin::class,
+        'User' => \App\Facades\User::class,
     ],
 
 ];

@@ -28,6 +28,6 @@ class AuthServiceProvider extends ServiceProvider
 
         Passport::routes();
 
-        Passport::cookie('ds_token');
+        Passport::cookie('mx_token');
     }
 }
