@@ -7,7 +7,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Digital Sigma') }}</title>
+    <title>{{ config('app.name', 'Elixir') }}</title>
 
 
     <!-- Fonts -->
