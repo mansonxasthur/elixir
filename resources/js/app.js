@@ -29,13 +29,11 @@ Vue.component('user-settings', require('./components/Settings').default); // set
  */
 
 import {mapGetters, mapMutations} from "vuex";
-import localization from './mixins/localization';
 
 const app = new Vue({
     el: '#app',
     vuetify,
     store,
-    mixins: [localization],
     computed: {
         ...mapGetters('drawer', {
             getDrawer: 'getDrawer',
